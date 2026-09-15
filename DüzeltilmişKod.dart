@@ -53,7 +53,7 @@ abstract class IFaturaServisi {
 }
 class PDFFatura implements IFaturaServisi{
     @override
-    faturaKes(String orderId){
+    void faturaKes(String orderId){
 	print("Fatura PDF cikarildi: $orderId");
     }
 }
@@ -144,7 +144,7 @@ void main() {
   var faturaci = PDFFatura();
   var siparisci = SiparisYoneticisi(db, mailci, smsci, kargocu, faturaci);
   var urun1 = DijitalOlmayanUrun("1", "Kablosuz Mouse", 450.0, 5);
-  var urun2 = Urun("2", "Flutter Kursu E-Kitap", 150.0, 100);
+  var urun2 = Urun("2", "Flutter Kursu E-Kitap", 150.0, 100,"Dijital");
   var sepet = <Urun>[urun1, urun2];
   siparisci.siparisTamamla(
     orderId: "SP-9921",
