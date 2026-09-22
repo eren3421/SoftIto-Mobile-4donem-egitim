@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 ÇALAR</title>
+    <style>
+        body{
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            background: rgb(29, 1, 244);
+            padding: 24px;
+            max-width: 600px;
+            margin:auto;
+        }
+        .sol-ust-kose {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+    }
+    .sag-ust-kose {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+    }
+        .card{
+        background: rgb(0, 255, 0);
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        margin-bottom: 15px;
+    }
+    .arka-plan{
+        background:olive;
+    }
+    dialog{
+            border:none;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    dialog::backdrop{
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blue(3px);
+        }
+    .btn-modal{
+            cursor:pointer;
+            background-color: purple;
+            color: gold;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+    details{
+            background:darkred;
+            margin-bottom: 10px;
+            border: 1px solid darkred;
+            border-radius: 6px;
+            padding: 5px;
+            width:350px;
+        }
+        summary{
+            cursor:pointer;
+            font-weight: bold;
+            color: darkgoldenrod;
+        }
+        details[open]{
+          background: darkred;
+        }
+    label{
+        display: block;
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    meter{
+        width: 100%;
+        height: 24px;
+        margin-bottom: 8px;
+    }
+    .hint{
+        font-size: 12px;
+        color:aliceblue gray;
+    }
+    video,iframe {
+        width: 100%;
+        max-width: 560px;
+        border-radius: 8px;
+        border: none;
+    }
+    </style>
+      
+</head>
+<body>
+<h1>      EREN MP3 ÇALAR</h1>
+<div class="sag-ust-kose">
+<div class="card">
+<meter value="360" id="m1" min="0" max="1000" low="200" high="450" optimum="850"></meter>
+<div class="hint">StTOKTAKİ MP3 ÇALAR SAYISI:360</div>
+</div>
+<div class="arka-plan">
+    <h3>DETAYLI BİLGİ AL</h3>
+    <p style="font-size: 13px; color: lawngreen;">Teknik DETAYLAR BUTONU</p>
+    <button class="btn-modal" onclick="document.getElementById('detay').showModal()">Kuponu Göster</button>
+    </div>
+    <dialog id="detay">
+        <p>32 GB dahili depolama</p>
+        <p>10 saate kadar pil ömrü</p>
+        <p>MP3, WAV ve FLAC desteği</p>
+        <p>3.5 mm kulaklık girişi</p>
+        <p>USB-C bağlantısı</p>
+        <p>2.4 inç renkli ekran</p>
+    </dialog>
+    </div>
+<div class="sol-ust-kose">
+<details>
+        <summary>MP3 ÇALAR NEDİR?</summary>
+        <p>MP3 çalar, dijital ses dosyalarını (özellikle MP3 formatını) depolayıp kulaklık aracılığıyla dinlemenizi sağlayan taşınabilir bir elektronik cihazdır</p>
+    </details>
+    <details>
+        <summary>MP3 ÇALAR FİYATLARI KAÇ TL?</summary>
+        <p>FİYATLAR 5000 İLE 10000 TL ARASI DEĞİŞMEKTEDİR</p>
+    </details>
+    </div>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/pSJi5YuK3gQ?si=uOARKyGvAWzNzDDF" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    <video controls>
+    <source src="tanitim.mp4" type="video/mp4">
+</video>
+</body>
+
+</html>

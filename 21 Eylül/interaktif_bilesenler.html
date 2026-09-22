@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif HTML5</title>
+    <style>
+        body{
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            background: lawngreen;
+            padding: 20px;
+            max-width: 500px;
+            margin:auto;
+        }
+        .box{
+            background: whitesmoke;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 16;
+            border: 1px solid white;
+        }
+        details{
+            margin-bottom: 10px;
+            border: 1px solid yellow;
+            border-radius: 6px;
+            padding: 10px;
+        }
+        summary{
+            cursor:pointer;
+            font-weight: bold;
+            color: darkblue;
+        }
+        details[open]{
+          background: white;  
+        }
+        details p{
+            font-size: 13px;
+            color: gray;
+            margin-top: 8px;
+
+        }
+        dialog{
+            border:none;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 360px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        dialog::backdrop{
+            background: rgba(15,23,42,0.6);
+            backdrop-filter: blue(3px);
+        }
+        .btn-modal{
+            cursor:pointer;
+            background-color: beige;
+            color: goldenrod;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+   <div class="box">
+    <h3>Sıkça sorulan sorular</h3>
+    <details open>
+        <summary>Kargo teslimatı süresi ne kadar</summary>
+        <p>Aynı gün gelir</p>
+    </details>
+    <details>
+        <summary>Taksit seçenekleri var mı?</summary>
+        <p>Tüm kredi kartlarına vadesiz 3 taksit imkanı var</p>
+    </details>
+   </div> 
+   <div class="box">
+    <h3>Kampanya Bildirimi</h3>
+    <p style="font-size: 13px; color: gray;">Aşağıdaki butona bas</p>
+    <button class="btn-modal" onclick="document.getElementById('indirimModal').showModal()">Kuponu Göster</button>
+    
+   </div>
+   <dialog id="indirimModal">
+        <h3 style="margin-top: 0;">DETAYLI BİLGİ AL</h3>
+        <p style="font-size: 13px; color:gray">Öğrenciye Özel İndirim</p>
+    </dialog>
+    <div style="background: gray; padding: 10px; text-align: center; font-weight: bold; border-radius:6px;color: black;">SOFTITO</div>
+    <div style="margin-top:16px;text-align: right;">
+        <div>
+            <button onclick="document.getElementById('indirimModal').close()" style="padding: 6px 12px; border-radius: 4px;cursor:pointer;"></button>
+        </div>
+    </div>
+</body>
+</html>

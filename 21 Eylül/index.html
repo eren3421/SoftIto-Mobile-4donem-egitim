@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{box-sizing: border-box; margin: 0; padding: 0;}
+        body{
+            font-family: 'Segoe UI';
+            background: gray;
+            color:black;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-container{
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            border-radius: 12px;
+            overflow: hidden;
+            background:black;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        }
+        video{
+            width: 100%;
+            display: block;
+        }
+        .custom-controls{
+            position:absolute;
+            bottom:0;
+            left:0;
+            right: 0;
+            background: linear-gradient(transparent),rgba(0,0,0,0.5);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: opacity 0.3s ease;
+        }
+        .timeline-container{
+            display:flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+        }
+        .progress-bar{
+            flex:1;
+            -webkit-appearance:none ;
+            height: 5px;
+            border-radius: 5px;
+            background: rgba(255,255,255,0.3);
+            outline: none;
+            cursor:pointer;
+        }
+        .progress-bar::-webkit-slider-thumb{
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50px;
+            background: blue;
+            cursor: pointer;
+        }
+        .button-group{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .left-controls,.right-controls{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        button{
+            background: none;
+            border:none;
+            color:white;
+            font-size: 14px;
+            font-weight: 600px;
+            padding: 6px 10px;
+            cursor:pointer;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+        }
+        button:hover{
+            background: rgba(255,255,255,0.25);
+        }
+        .speed-badge{
+            background: blue;
+            color: aliceblue;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="margin-bottom: 16px">Video Oynatıcı</h2>
+    <div class="player-container" id="videoBox">
+        <video id="myVideo" playsinline webkit-playsinline preload="metadata">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+            <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.webm" type="video/webm">
+            Tarayıcınız HTML5i Desteklemiyor
+        </video>
+        <div class="custom-controls">
+            <div class="timeline-container">
+                <span id="currentTime">00:00</span>
+                <input type="range" id="progress-bar" class="progress-bar" min="0" max="100" value="0">
+                <span id="durationTime">00:00</span>
+            </div>
+            <div class="button-group">
+                <div class="left-controls">
+                    <button id="btnPlay">Oynat</button>
+                    <button id="btnMinute">Sesli</button>
+                </div>
+                <div class="right-controls">
+                    <button id="btnSpeed" class="speed-badge">1.0x</button>
+                    <button id="btnPip">Pip</button>
+                    <button id="btnFull">Tam Ekran</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+       const video = document.getElementById('myVideo');
+const btnPlay = document.getElementById('btnPlay');
+const btnMinute = document.getElementById('btnMinute');
+const btnSpeed = document.getElementById('btnSpeed');
+const btnPip = document.getElementById('btnPip');
+const btnFull = document.getElementById('btnFull');
+// HTML'deki id ile aynı olmalı
+const progressBar = document.getElementById('progress-bar'); 
+const currentTimeEl = document.getElementById('currentTime');
+// Alt tarafla uyumlu olması için adına durationTimeEl dedik
+const durationTimeEl = document.getElementById('durationTime'); 
+
+btnPlay.addEventListener('click', () => {
+    if (video.paused) {
+        video.play();
+        btnPlay.innerText = "Duraklat";
+    } else {
+        video.pause();
+        btnPlay.innerText = "Oynat";
+    }
+});
+
+function formatTime(seconds) {
+    if (isNaN(seconds)) return "00:00"; // Süre henüz yüklenmediyse NaN hatasını önler
+    const min = Math.floor(seconds / 60);
+    const sec = Math.floor(seconds % 60);
+    return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+}
+
+// loadmetadata değil -> loadedmetadata
+video.addEventListener('loadedmetadata', () => {
+    durationTimeEl.innerText = formatTime(video.duration);
+});
+
+video.addEventListener('timeupdate', () => {
+    currentTimeEl.innerText = formatTime(video.currentTime);
+    // video.durationTime değil -> video.duration
+    const progress = (video.currentTime / video.duration) * 100;
+    // isNan değil isNaN ve mantık düzeltildi
+    progressBar.value = isNaN(progress) ? 0 : progress; 
+});
+
+progressBar.addEventListener('input', (e) => {
+    const seekTime = (e.target.value / 100) * video.duration;
+    video.currentTime = seekTime;
+});
+
+btnMinute.addEventListener('click', () => {
+    // vudeo değil -> video
+    video.muted = !video.muted; 
+    btnMinute.innerText = video.muted ? 'Sessiz' : 'Sesli';
+});
+
+const speeds = [1.0, 1.25, 1.5, 2.0];
+let speedIndex = 0;
+btnSpeed.addEventListener('click', () => {
+    speedIndex = (speedIndex + 1) % speeds.length;
+    video.playbackRate = speeds[speedIndex];
+    // Süslü parantezler ve 'x' eklendi
+    btnSpeed.innerText = `${speeds[speedIndex]}x`; 
+});
+
+btnPip.addEventListener('click', async () => {
+    try {
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+        } else {
+            // PiP moduna girme kodu eklendi
+            await video.requestPictureInPicture(); 
+        }
+    } catch (err) {
+        console.warn('Pip desteklenmiyor ya da izin verilmiyor', err);
+    }
+});
+
+// Ekstra: Tam Ekran butonunun işlevi de eksikti, onu da ekledim.
+btnFull.addEventListener('click',  () => {
+    const container=document.getElementById('videoBox');
+    if (!document.fullscreenElement) {
+         video.requestFullscreen().catch(err => {
+            container.requestFullscreen().catch(err=>alert (err.message));
+        });
+    } else {
+        document.exitFullscreen();
+    }
+});
+    </script>
+</body>
+</html>

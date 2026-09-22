@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML 5 GÖSTERGELERİ</title>
+</head>
+<style>
+    body{
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        background: white;
+        padding: 24px;
+        max-width: 480px;
+        margin:auto;
+    }
+    .card{
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        border: 1px solid white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        margin-bottom: 15px;
+    }
+    label{
+        display: block;
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+    progress,meter{
+        width: 100%;
+        height: 24px;
+        margin-bottom: 8px;
+    }
+    .hint{
+        font-size: 12px;
+        color:aliceblue gray;
+    }
+</style>
+<body>
+ <div class="card">
+    <h3>HTML 5 YEREL GÖSTERGELER</h3>
+    <label for="p1">Profil Doluluk Oranı</label>
+    <progress id="p1" value="75" max="100">%75 tamamlandı</progress>
+    <div class="hint">İlerleme çubuğu %75 tamamlandı</div>
+    <hr style="margin: 16px 0;border: 0;border-top:1px solid wheat">
+    <label for="m1">Mobil Batarya Seviyesi</label>
+    <meter value="10" id="m1" min="0" max="100" low="20" high="80" optimum="90"></meter>
+    <div class="hint">Kritik seviye altında olduğu için otomatik olarak kırmızı yaptı</div>
+    <br>
+    <meter value="85" id="m1" min="0" max="100" low="20" high="80" optimum="90"></meter>
+    <div class="hint">İdeal Seviyede olduğu için otomatik olarak yeşil</div>
+ </div> 
+</body>
+</html>
