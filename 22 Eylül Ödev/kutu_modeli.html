@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Box Model ve Taşma Kutusu</title>
+    <style>
+        *,
+        *::before,
+        *::after{
+            box-sizing: border-box;
+            margin:0;
+            padding: 0;
+        }
+        body{
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            background-color: aliceblue;
+        }
+        .box-container{
+            width:100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .broken-box{
+            box-sizing: content-box;
+            width: 100%;
+            padding: 24px;
+            border:6px solid red;
+            background-color: wheat;
+            margin-bottom: 30px;
+        }
+        .fixed-box{
+            box-sizing: border-box;
+            width: 100%;
+            padding: 24px;
+            border: 6px solid green;
+            background-color: aliceblue;
+            border-radius: 12px;
+        }
+        .truncate-text{
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 250px;
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 12px;
+            border: 1px solid white;
+        }
+    </style>
+</head>
+<body>
+    <div class="box-container">
+        <h3>content-box{taşma yapan eleman}</h3>
+        <div class="broken-box">Ekrandan taşan kutu</div>
+        <h3>border-box{Kusursuz Kutu}</h3>
+        <div class="fixed-box">
+            Tam ekran dostu
+            <div class="truncate-text" title="Bu çok uzun bir İban veya sipariş numarası veya extra bir metin olabilir">
+                Loredsfgffdfsfddsf
+                fdfsdfsfdsfsdgfgdgdf
+                dfdsffdsfdsdssdffdsfdsfds
+                fsfdsfdsfdsfdsdfsghgd
+                sfdfsdfdsfsfsfsfsdfsfdsf
+                hffhfghfgfhtuyttyuytyuyufds
+                fgdfgdgfggfggggggggggggf
+            </div>
+        </div>
+    </div>
+</body>
+</html>

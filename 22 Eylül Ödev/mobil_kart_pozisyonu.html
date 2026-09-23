@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Css Pozisyonlama</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: black;
+            color: aliceblue;
+            padding-bottom: 80px;
+        }
+
+        .mobil-header {
+            position: sticky;
+            top: 0px;
+            z-index: 100;
+            background: rgba(14, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-bottom: 1px solid gray;
+            font-weight: 700;
+        }
+
+        .feed {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-card {
+            position: relative;
+            background: black;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid gray;
+            padding: 20px;
+        }
+
+        
+        .product-card p {
+            color: aliceblue;
+            margin: 8px 0 16px;
+        }
+
+       
+        .product-card strong {
+            color: aqua;
+            font-size: 20px;
+            display: block;
+        }
+
+        
+        .badge-discount {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: green;
+            color: white;
+            font-size: 12px;
+            font-weight: 800; 
+            padding: 4px 12px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.5);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 64px;
+            background: black;
+            border-top: 1px solid gray;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 200;
+        }
+
+        .fab-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #3b82b6;
+            color: wheat;
+            font-size: 24px;
+            border: none;
+            box-shadow: 0 0px 24px rgba(50, 130, 240, 0.5);
+            cursor: pointer;
+            z-index: 150;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="mobil-header">Keşfet ve Alışveriş Yap</header>
+
+    <main class="feed">
+        <div class="product-card">
+            <span class="badge-discount">İNDİRİM</span>
+            <h3>Kablosuz Kulaklık</h3>
+            <p>Aktif Gürültü Engelleme</p>
+            <p>Nabız ve Tansiyon Ölçme</p>
+            <strong>1000 TL</strong>
+        </div>
+
+        <button class="fab-btn">+</button>
+
+        <nav class="bottom-nav">
+            <span>Anasayfa</span>
+            <span>Arama</span>
+            <span>Sepetim</span>
+            <span>Profil</span>
+        </nav>
+    </main>
+
+</body>
+</html>

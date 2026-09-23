@@ -1,0 +1,208 @@
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f4f9;
+    color: #333;
+    
+    padding-bottom: 80px; 
+}
+
+
+.mobile-wrapper {
+    max-width: 480px;
+    margin: 0 auto;
+    background-color: #ffffff;
+    min-height: 100vh;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+}
+
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    z-index: 100;
+    border-bottom: 1px solid #eee;
+}
+
+.header-title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #333;
+    cursor: pointer;
+}
+
+
+.product-image-container {
+    position: relative;
+    width: 100%;
+    background-color: #f9f9f9;
+}
+
+.product-image-container img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+}
+
+.badge {
+    position: absolute;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.discount-badge {
+    top: 15px;
+    left: 15px;
+    background-color: #e74c3c;
+}
+
+.free-shipping-badge {
+    top: 15px;
+    right: 15px;
+    background-color: #27ae60;
+}
+
+
+.product-info {
+    padding: 20px;
+}
+
+.brand {
+    color: #888;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.product-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    line-height: 1.3;
+}
+
+.product-desc {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 25px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chip {
+    padding: 10px 16px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    background-color: #fff;
+    transition: all 0.2s ease;
+}
+
+.chip:hover {
+    border-color: #3498db;
+    color: #3498db;
+}
+
+.chip.active {
+    background-color: #3498db;
+    color: #fff;
+    border-color: #3498db;
+}
+
+
+.fixed-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px; 
+    background-color: #fff;
+    padding: 15px 20px;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+}
+
+.price-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.old-price {
+    font-size: 12px;
+    text-decoration: line-through;
+    color: #999;
+    margin-bottom: 2px;
+}
+
+.current-price {
+    font-size: 22px;
+    font-weight: 800;
+    color: #2c3e50;
+}
+
+.add-to-cart-btn {
+    background-color: #2c3e50;
+    color: #fff;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.add-to-cart-btn:active {
+    background-color: #1a252f;
+    transform: scale(0.98);
+}

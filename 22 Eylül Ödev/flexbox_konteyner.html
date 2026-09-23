@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlexBox Konteyner Laboratuvarı</title>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background-color: #f8fafc;
+        }
+
+        h2 {
+            margin-bottom: 12px;
+            font-size: 18px;
+            color: #0f172a;
+        }
+
+        .chip-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .chip {
+            background: wheat;
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid whitesmoke;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334115;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        
+        .card-header h3 {
+            font-size: 16px;
+            color: #1e293b;
+        }
+
+        
+        .card-header p {
+            color: #64748b; 
+            font-size: 13px;
+        }
+
+        /* Inline CSS'ten aktarılan buton stili */
+        .card-header button {
+            background: darkblue;
+            color: aliceblue;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Mobil filtre(flex-wrap+gap)</h2>
+    <div class="chip-container">
+        <div class="chip">Akıllı Telefon</div>
+        <div class="chip">Akıllı Kulaklık</div>
+        <div class="chip">Akıllı Saat</div>
+        <div class="chip">Akıllı Konsol</div>
+        <div class="chip">Akıllı Aksesuar</div>
+        <div class="chip">Akıllı Bilgisayar</div>
+    </div>
+
+    <h2>Navigasyon baru (space-between+align-items)</h2>
+    <div class="card-header">
+        <div>
+            <h3>Kullanıcı Profili</h3>
+            <p>Son Giriş Bugün</p>
+        </div>
+        <button>Düzenle</button>
+    </div>
+
+</body>
+</html>
