@@ -14,24 +14,42 @@ function tahminiSarjSuresi(hedefYuzde,MevcutYuzde,BataryaKiloWatt,istasyonKilowa
             gerekliGuc=(hedefYuzde-MevcutYuzde)/100*BataryaKiloWatt;
             sureDakika=BataryaKiloWatt/(istasyonKilowatt*verimlilikKatsayisi)*60;
         };
-function tahminiFiyat(hedefYuzde, MevcutYuzde, BataryaKiloWatt, istasyonKilowatt, verimlilikKatsayisi, zaman) {
-    if (hedefYuzde <= MevcutYuzde){
+function tahminiFiyat(hedefYuzde, MevcutYuzde, BataryaKiloWatt, istasyonKilowatt, verimlilikKatsayisi, baslangicSaati) {
+    if (hedefYuzde <= MevcutYuzde) {
         return 0;
     }
     const gerekliEnerji = BataryaKiloWatt * ((hedefYuzde - MevcutYuzde) / 100);
     const sebekedenCekilenEnerji = gerekliEnerji / verimlilikKatsayisi;
-    let birimFiyat = 0;
-    if (zaman >= 6 && zaman < 17) {
-        birimFiyat = 3.90;
-    } 
-    else if (zaman >= 17 && zaman < 22) {
-        birimFiyat = 5.50; 
-    } 
-    else {
-        birimFiyat = 1.85;
+    let kalanDakika = Math.round((gerekliEnerji / (istasyonKilowatt * verimlilikKatsayisi)) * 60);
+    const dakikaBasinaKwh = sebekedenCekilenEnerji / kalanDakika;
+    let toplamFiyat = 0;
+    let anlikSaat = baslangicSaati; 
+    const parr = [3.90, 5.50, 1.85];
+
+    while (kalanDakika > 0) {
+        let tarifeIndex;
+        let kalanTarifeDakikasi;
+        if (anlikSaat >= 6 && anlikSaat < 17) {
+            tarifeIndex = 0;
+            kalanTarifeDakikasi = (17 - anlikSaat) * 60;
+        } else if (anlikSaat >= 17 && anlikSaat < 22) {
+            tarifeIndex = 1;
+            kalanTarifeDakikasi = (22 - anlikSaat) * 60;
+        } else {
+            tarifeIndex = 2;
+            if (anlikSaat >= 22) {
+                kalanTarifeDakikasi = (24 - anlikSaat + 6) * 60;
+            } else {
+                kalanTarifeDakikasi = (6 - anlikSaat) * 60;
+            }
+        }
+
+        let harcananDakika = Math.min(kalanDakika, kalanTarifeDakikasi);
+        toplamFiyat += harcananDakika * dakikaBasinaKwh * parr[tarifeIndex];
+        kalanDakika -= harcananDakika;
+        anlikSaat = (anlikSaat + (harcananDakika / 60)) % 24;
     }
-    const toplamFiyat = sebekedenCekilenEnerji * birimFiyat;
-    return toplamFiyat;
+    return Number(toplamFiyat.toFixed(2));
 }
     </script>
 </body>
