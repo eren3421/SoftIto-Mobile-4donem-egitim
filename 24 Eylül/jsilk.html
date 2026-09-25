@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS İLK DERS</title>
+</head>
+<body>
+    <script>
+        const isim="Eren";
+        const bataryaKapasitesi=88.5;
+        const sarjTamamlandi=false;
+        let sonrakiRandevu;
+        const servisNotu=null;
+        const buyukSayi=65161661611;
+        const gizliAnahtar=Symbol("id");
+        console.log(typeof isim);
+        console.log(typeof bataryaKapasitesi);
+        console.log(typeof sarjTamamlandi);
+        console.log(typeof servisNotu);
+        console.log(servisNotu);
+        console.log("5"+2);//string 52 bastırır.
+        console.log("5"-2);//integer 3 yapar.
+        console.log("beş"*2);//NaN hatası verir.
+        const stringFiyat="1473.33";
+        const sayiFiyat=Number(stringFiyat);
+        const pixelDeger=parseInt("48px",10);
+        const metinSayi=String(2026);
+        console.log(stringFiyat);
+        console.log(sayiFiyat);
+        console.log(pixelDeger);
+        console.log(metinSayi);
+        // template literal
+        const kullanici="Eren";
+        const bakiye=10000;
+        const harcama=10000;
+        const eskiMesaj="Sayın"+kullanici+"Kalan bakiyeniz"+(bakiye-harcama)+"TL dir.";
+        const modernMesaj=`Sayın ${kullanici} bugünkü harcamanız: ${harcama} TL Bakiyeniz ${harcama-bakiye} dURUM: ${bakiye-harcama>1000 ? "Güvenli Bakiye":"Kritik Bakiye"}`;
+        const bataryaSeviyesi=14;
+        const istasyonUyumu=true;
+        const bakiyeTL=450;
+        const minimumGirisTutari=200;
+        if(!istasyonUyumu){
+            console.log("Istasyon uyumlu degil");
+        }
+        else if(bakiyeTL<minimumGirisTutari){
+            console.log(`Bakiye yetersiz en az ${minimumGirisTutari} TL olmalıdır`);
+        }
+        else if(bataryaSeviyesi<20){
+            console.log("Ultra şarj modu açıldı");
+        }
+        else{
+            console.log("Şarj ediliyor");
+        }
+        // 0 false "" null undefined ve NaN false kabul edilir.
+        const input="";
+        if(input){
+            console.log("Girdi dolu");
+        }
+        else{
+            console.log("Girdi bos");
+        }
+        const socketDurumu="mesgul";
+        const durumMesajı=socketDurumu===mesgul ? "Socket baglı" : "Socket bağlı degil";
+        console.log(durumMesajı);
+        function toplamKlasik(a,b){
+            return a+b;
+        }
+        // Modern fomksiyon ES6 stili
+        const toplaModern=(a,b)=>{
+            return a+b;
+        }
+        // Tek satırlık fonksiyon
+        const toplamKisa=(a,b)=>a+b;
+        const kareAl=a=>a*a;
+        const profilUret=(ad,rol)=>({
+            ad:ad,
+            rol:rol,
+            kayitTarihi:2026
+        });
+        console.log("Sonuc",toplamKlasik(4,3));
+        console.log("Sonuc",profilUret("Eren","Admin"));
+        const indirimliTutar=(fiyat,indirimOrani)=>fiyat*(100-indirimOrani)/100;
+        tahminhesapla=(hedefYuzde-MevcutYuzde)*BataryaKiloWatt/istasyonKilowatt/60;
+        function tahminiSarjSuresi(hedefYuzde,MevcutYuzde,BataryaKiloWatt,istasyonKilowatt){
+            return (hedefYuzde-MevcutYuzde)*BataryaKiloWatt/istasyonKilowatt*60;
+        };
+        // her yüzde bir 1000 kilowatt
+    </script>
+</body>
+</html>

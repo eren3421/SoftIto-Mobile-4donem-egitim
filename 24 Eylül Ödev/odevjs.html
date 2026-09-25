@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+function tahminiSarjSuresi(hedefYuzde,MevcutYuzde,BataryaKiloWatt,istasyonKilowatt,verimlilikKatsayisi){
+            if(hedefYuzde<=MevcutYuzde){
+                return 0;
+            }
+            gerekliGuc=(hedefYuzde-MevcutYuzde)/100*BataryaKiloWatt;
+            sureDakika=BataryaKiloWatt/(istasyonKilowatt*verimlilikKatsayisi)*60;
+        };
+function tahminiFiyat(hedefYuzde, MevcutYuzde, BataryaKiloWatt, istasyonKilowatt, verimlilikKatsayisi, zaman) {
+    if (hedefYuzde <= MevcutYuzde){
+        return 0;
+    }
+    const gerekliEnerji = BataryaKiloWatt * ((hedefYuzde - MevcutYuzde) / 100);
+    const sebekedenCekilenEnerji = gerekliEnerji / verimlilikKatsayisi;
+    let birimFiyat = 0;
+    if (zaman >= 6 && zaman < 17) {
+        birimFiyat = 3.90;
+    } 
+    else if (zaman >= 17 && zaman < 22) {
+        birimFiyat = 5.50; 
+    } 
+    else {
+        birimFiyat = 1.85;
+    }
+    const toplamFiyat = sebekedenCekilenEnerji * birimFiyat;
+    return toplamFiyat;
+}
+    </script>
+</body>
+</html>
