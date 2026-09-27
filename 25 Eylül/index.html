@@ -1,0 +1,113 @@
+<script>
+    /*let sayi1=100;
+    let sayi2=sayi1;
+    sayi2=250;
+    console.log("sayi1",sayi1);
+    console.log("sayi2",sayi2);
+    const istasyonlarA=["Kadıköy DC","Beşiktaş AC"];
+    const istasyonlarB=istasyonlarA;
+    istasyonlarB.push("Üsküdar DC");
+    console.log(istasyonlarA);
+    console.log(istasyonlarB);
+    console.log(istasyonlarA===istasyonlarB);
+    const bagimsizKopya=[...istasyonlarA];
+    bagimsizKopya.push("Maltepe DC");
+    console.log(istasyonlarA.length);
+    console.log(bagimsizKopya.length);*/
+    /////////////////////
+    const sarjIstasyonlari=[
+        {id:"İstanbul-01",lokasyon:"Zorlu center",tip:"DC",gucKw:100
+            ,durum:"Aktif",seansAdet:45,tarifeTl:12}
+        ,
+        {id:"İstanbul-02",lokasyon:"Kadıköy",tip:"DC",gucKw:150
+            ,durum:"Aktif",seansAdet:50,tarifeTl:11}
+        ,
+        {id:"İstanbul-03",lokasyon:"Beşiktaş",tip:"AC",gucKw:200
+            ,durum:"Aktif",seansAdet:45,tarifeTl:12}
+        ,
+        {id:"İstanbul-04",lokasyon:"Esenyurt",tip:"DC",gucKw:90
+            ,durum:"Pasif",seansAdet:50,tarifeTl:10}
+        ,
+        {id:"İstanbul-05",lokasyon:"Zorlu center",tip:"AC",gucKw:170
+            ,durum:"Pasif",seansAdet:45,tarifeTl:25}
+        ,
+    ];
+    //////////////// MAP İLE DÖNGÜ
+    const istasyonOzeti=sarjIstasyonlari.map(ist=>{
+        return `${ist.lokasyon} - ${ist.tip} - ${ist.gucKw},-${ist.durum.toUpperCase()}`
+    });
+    
+    console.log("Map Sonucu",istasyonOzeti);
+    const yer=sarjIstasyonlari.map(ist=>ist.lokasyon);
+    console.log("Lokasyon Sonucu",yer);
+    const aktifDCIstasyonlar=sarjIstasyonlari.filter(ist=>ist.durum==='Aktif'&&ist.tip==="DC");
+    console.log(aktifDCIstasyonlar);
+    const bulunan=sarjIstasyonlari.find(ist=>ist.id==="İstanbul-03");
+    console.log("Bulunan istasyon",bulunan.lokasyon,bulunan.tip,bulunan.gucKw,bulunan.tarifeTl,bulunan.seansAdet);
+    const bakimOlanvarmi=sarjIstasyonlari.some(ist=>ist.durum==="bakım");
+    const hepsiAktifmi=sarjIstasyonlari.some(ist=>ist.durum==="Aktif");
+    console.log("Bakım olan var mı",bakimOlanvarmi);
+    console.log("Tüm istasyonlar var mı",hepsiAktifmi);
+    const toplam=sarjIstasyonlari.reduce((aku,istasyon)=>{
+       return  aku+istasyon.seansAdet;
+    },0)
+    console.log("Toplam seans",toplam);
+    const aktifCtoplamguc=sarjIstasyonlari.filter(ist=>ist.durum==="Aktif"&&ist.tip=="DC").map(ist=>ist.gucKw).reduce((toplam,guc)=>toplam+guc,0);
+    console.log(aktifCtoplamguc);
+    const pahaliAktif=sarjIstasyonlari.filter(ist=>ist.durum==="Aktif"&&ist.tarifeTl>10).map(ist=>ist.lokasyon);
+    console.log(pahaliAktif);
+    // NESNELER
+    const istasyonYonetimi={
+        kod:"TR-IST-006",
+        ad:"Kadıköy Dc Hızlı Şarj",
+        kapasiteSoket:4,
+        aktifSoketler:["Soket-A","Soket-B"],
+        tarife:{birimTL:12,
+        geceIndirimYuzdesi:20},
+    musaitlikRaporu: function(){
+        const bostaAdet=this.kapasiteSoket;
+        return `${this.ad} istasyonunda ${this.kapasiteSoket - this.aktifSoketler.length} adet soket boştadır.`;
+    },
+    geceTarifesiHesapla: function(){
+        const indirim=this.tarife.birimTL*[this.tarife.geceIndirimYuzdesi/100];
+        return this.tarife.birimTL - indirim;
+    }
+}
+console.log(istasyonYonetimi.musaitlikRaporu());
+console.log("Gece birim fiyat",istasyonYonetimi.geceTarifesiHesapla());
+console.log("Keys",Object.keys(istasyonYonetimi));
+console.log("Value",Object.values(istasyonYonetimi.tarife));
+/// array parçalama const içindeki veri doğrudan değişmez ya pushlanır ya da yeniden verilir
+const aracVerisi={marka:"Togg",model:"T10X",yil:2026,
+batarya:{kapasiteKwh:88.5,kimya:"NMC",garantiYil:8},renk:
+"Gece Mavisi"};
+const {marka,model,renk="Beyaz"}=aracVerisi;
+console.log(`Araç ${marka} ${model} | Renk:${renk}`);
+// iç içe ve yeniden isimkendirme
+const {batarya:{kapasiteKwh:bataryaBoyutu,kimya}}=aracVerisi;
+console.log(`Batarya ${bataryaBoyutu} KWh Hücre Kimyası ${kimya}`);
+// React prop parametre ile aynı mantık
+const aracaEkranaBas=({marka,model,batarya:{kapasiteKwh}})=>{
+    console.log(`Gelen araç: ${marka} ${model} ${kapasiteKwh}`);
+}
+aracaEkranaBas(aracVerisi);
+// isimsis veriyi isimlendirmek
+const koordinatlar=[41.0082,28.9785];
+const[enlem,boylam]=koordinatlar;
+console.log(`Ekran ${enlem} ${boylam}`);
+const puanlar=[95,88,76,65,54];
+const[birinci,ikinci,...kalanlar]=puanlar;
+console.log(`Şampiyon ${birinci} ${ikinci} ${kalanlar}`);
+const temelTarife={
+    kdvOrani:0.20,
+    parabirimi:"TL",
+    geceTarifesiVar:true
+}
+const guncelTarife={
+    ...temelTarife,   // eski özellikleri aynen kopyala
+    birimFiyat:11.50, //yeni özellik ekle
+                     // var olan özelliği değişti
+    parabirimi:"TRY"
+}
+console.log("Yeni tarife nesnesi",guncelTarife);
+</script>
