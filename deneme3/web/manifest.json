@@ -1,0 +1,11 @@
+{
+  "name": "Vites Select | Araba Galerisi",
+  "short_name": "Vites Select",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f5f7f6",
+  "theme_color": "#152126",
+  "description": "Seçkin otomobilleri keşfedin ve test sürüşü randevusu alın.",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false
+}

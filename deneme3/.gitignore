@@ -1,0 +1,13 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+/build/
+/coverage/
+/android/local.properties
+/ios/Flutter/.last_build_id
+/macos/Flutter/GeneratedPluginRegistrant.swift
+/web/.last_build_id
+*.iml
+.idea/

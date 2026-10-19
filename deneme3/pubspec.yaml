@@ -1,0 +1,16 @@
+name: araba_galerisi
+description: "Seçkin otomobilleri keşfetmek için araba galerisi uygulaması."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
