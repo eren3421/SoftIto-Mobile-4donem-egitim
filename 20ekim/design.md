@@ -1,0 +1,3 @@
+* **Tasarım Dili:** Material 3, Ciddi gözüken kahverengimsi ton:
+  * **Aydınlık Mod (Klasik Defter Paleti):**  Not alma bölümü için sıcak fildişi/krem kağıt arka planı (`#FAF6F0`), dolma kalem laciverti/koyu kahve mürekkep metinler (`#2C221E`), eskitme deri cilt kahvesi (`#8B5A2B`) ve altın ayraç vurguları (`#D4AF37`).
+  * **Koyu Mod (Gece Okuma & Deri Kapak Paleti):** Koyu eskitme deri/gece karbonu arka plan (`#181512`), göz yormayan yumuşak parşömen metinler (`#E6DEC8`), sıcak kehribar/amber vurguları (`#E09F3E`). sayfalarda genel yapı olarak kahvrenginin orta açık tonlarını kullan
