@@ -87,25 +87,38 @@ Kullanıcıya daima akıcı ve samimi Türkçe ile, yapıcı, mikro adımlara od
         {'role': 'user', 'content': userMessage},
       ];
 
-      // Kredisiz, ücretsiz serverless altyapısını (:hf-inference) öncele
-      final modelsToTry = [
-        '${AppConfig.selectedHfModel}:hf-inference',
-        AppConfig.selectedHfModel,
-        'mistralai/Mistral-7B-Instruct-v0.3:hf-inference',
-        'mistralai/Mistral-7B-Instruct-v0.3',
-        'Qwen/Qwen2.5-7B-Instruct:hf-inference',
-        'Qwen/Qwen2.5-7B-Instruct',
-        'meta-llama/Llama-3.2-3B-Instruct:hf-inference',
-        'HuggingFaceH4/zephyr-7b-beta',
-        'google/gemma-2-2b-it',
-      ];
+      // Token türüne göre optimize edilmiş model listesi belirle
+      List<String> modelsToTry;
+      if (token.startsWith('gsk_')) {
+        // Groq Cloud: %100 Ücretsiz, Kredisiz Canlı Modeller
+        modelsToTry = [
+          'llama-3.3-70b-versatile',
+          'mixtral-8x7b-32768',
+          'qwen-2.5-32b',
+          'gemma2-9b-it',
+        ];
+      } else if (token.startsWith('sk-or-')) {
+        // OpenRouter: Tamamen Ücretsiz Canlı Modeller (:free)
+        modelsToTry = [
+          'meta-llama/llama-3.2-3b-instruct:free',
+          'deepseek/deepseek-r1:free',
+          'google/gemini-2.0-flash-exp:free',
+          'qwen/qwen-2.5-72b-instruct:free',
+        ];
+      } else {
+        // Hugging Face Router'ında aktif doğrulanmış resmi modeller
+        modelsToTry = [
+          AppConfig.selectedHfModel,
+          ...AppConfig.fallbackHfModels.where((m) => m != AppConfig.selectedHfModel),
+        ];
+      }
 
       String? lastErrorDetail;
       bool had402CreditError = false;
 
       for (final model in modelsToTry) {
         try {
-          debugPrint('[HuggingFaceService] Model çağrılıyor: $model...');
+          debugPrint('[HuggingFaceService] Model çağrılıyor: $model (${AppConfig.hfChatEndpoint})...');
           final reply = await _callHfChatCompletion(
             model: model,
             token: token,
@@ -122,16 +135,16 @@ Kullanıcıya daima akıcı ve samimi Türkçe ile, yapıcı, mikro adımlara od
           final statusCode = dioErr.response?.statusCode;
           debugPrint('[HuggingFaceService] $model hatası: $statusCode - ${dioErr.message}');
           if (statusCode == 401) {
-            return '⚠️ Hugging Face Yetkilendirme Hatası (401 Unauthorized):\n\n'
-                'Girdiğiniz Hugging Face Token geçersiz veya yetkisiz görünüyor.\n'
-                'Lütfen huggingface.co/settings/tokens üzerinden aldığınız "Read" yetkili tokeni sağ üstteki 🔑 simgesinden güncelleyiniz.';
+            return '⚠️ Yetkilendirme Hatası (401 Unauthorized):\n\n'
+                'Girdiğiniz API Token geçersiz veya yetkisiz.\n'
+                'Lütfen sağ üstteki 🔑 simgesinden tokeninizi kontrol edip güncelleyiniz.';
           } else if (statusCode == 402) {
             had402CreditError = true;
-            debugPrint('[HuggingFaceService] $model ücretli kredi istedi (402). Diğer ücretsiz serverless model deneniyor...');
-            lastErrorDetail = 'HTTP 402: $model için ücretli Inference Provider kredisi istendi.';
+            debugPrint('[HuggingFaceService] $model ücretli kredi istedi (402). Sonraki model deneniyor...');
+            lastErrorDetail = 'HTTP 402: $model için ücretli kredi istendi.';
             continue;
           }
-          lastErrorDetail = 'HTTP $statusCode: ${dioErr.response?.data?['error'] ?? dioErr.message}';
+          lastErrorDetail = 'HTTP $statusCode: ${dioErr.response?.data?['error']?['message'] ?? dioErr.response?.data?['error'] ?? dioErr.message}';
         } catch (e) {
           debugPrint('[HuggingFaceService] $model istisna: $e');
           lastErrorDetail = e.toString();
@@ -140,14 +153,10 @@ Kullanıcıya daima akıcı ve samimi Türkçe ile, yapıcı, mikro adımlara od
 
       if (had402CreditError) {
         return '⚠️ Hugging Face Kredi Uyarısı (HTTP 402 - No Remaining Credits):\n\n'
-            'Hugging Face, kullandığınız token türü için harici sağlayıcı (Inference Providers) kredisi talep ediyor.\n\n'
-            '💡 Bunu 1 Dakikada ÜCRETSİZ Çözmek İçin:\n'
-            '1. https://huggingface.co/settings/tokens adresine gidin.\n'
-            '2. "Create new token" butonuna tıklayın.\n'
-            '3. Token tipi olarak "Fine-grained" yerine doğrudan "Read" (User Access Token) seçin.\n'
-            '   (Eğer Fine-grained oluşturacaksanız sadece "Make calls to the serverless Inference API" seçeneğini işaretleyin).\n'
-            '4. Yeni oluşturulan "hf_..." kodunu kopyalayıp sağ üstteki 🔑 simgesine yapıştırın.\n\n'
-            'Klasik "Read" tokenleri Hugging Face\'in ücretsiz sunucularına doğrudan bağlanır ve kredi istemez.';
+            'Hugging Face, router üzerindeki modeller için ücretli kredi talep etmektedir.\n\n'
+            '💡 2 Basit Çözüm Yolu:\n'
+            '1. (Önerilen - %100 Ücretsiz): console.groq.com/keys adresinden 10 saniyede ücretsiz bir Groq API Key (gsk_...) alıp 🔑 butonuna yapıştırın. Kredi kartı istemez, Llama 3.3 70B anında canlı çalışır!\n'
+            '2. Veya Hugging Face hesabınıza huggingface.co/settings/billing üzerinden 1\$ kredi ekleyin.';
       }
 
       return '⚠️ Hugging Face Modeline Ulaşılamadı:\n\n'
@@ -207,8 +216,15 @@ Lütfen şu 3 ana başlık altında profesyonel ve teşvik edici bir uzman rapor
         {'role': 'user', 'content': prompt},
       ];
 
+      String modelToUse = AppConfig.selectedHfModel;
+      if (token.startsWith('gsk_')) {
+        modelToUse = 'llama-3.3-70b-versatile';
+      } else if (token.startsWith('sk-or-')) {
+        modelToUse = 'meta-llama/llama-3.2-3b-instruct:free';
+      }
+
       final reply = await _callHfChatCompletion(
-        model: AppConfig.selectedHfModel,
+        model: modelToUse,
         token: token,
         messages: messages,
         maxTokens: 800,

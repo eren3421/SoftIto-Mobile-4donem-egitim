@@ -190,7 +190,7 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
               const Icon(Icons.psychology, color: AppColors.accent, size: 22),
               const SizedBox(width: 8),
               Text(
-                'Hugging Face Canlı Model',
+                'Canlı Yapay Zeka Ayarı',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -204,21 +204,19 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Arka plandaki yapay zeka modelinin (Qwen 2.5 72B / Mistral 7B) canlı olarak cevap üretmesi için Hugging Face "Read" tokeninizi buraya yapıştırın.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
+                'Arka plandaki yapay zeka modelinin canlı çalışabilmesi için geçerli bir API anahtarı giriniz:\n\n'
+                '• ⚡ Groq Cloud (%100 ÜCRETSİZ Llama 3.3 70B - Önerilen):\n  console.groq.com/keys (gsk_...)\n\n'
+                '• 🤗 Hugging Face Router:\n  huggingface.co/settings/tokens (hf_...)\n\n'
+                '• 🌐 OpenRouter (Ücretsiz Modeller):\n  openrouter.ai/keys (sk-or-...)',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35),
               ),
-              const SizedBox(height: 8),
-              const Text(
-                'Ücretsiz token almak için: huggingface.co/settings/tokens',
-                style: TextStyle(color: AppColors.softPink, fontSize: 11, fontStyle: FontStyle.italic),
-              ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               TextField(
                 controller: tokenController,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: 'hf_xxxxxxxxxxxxxxxxxxxxxx',
-                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  hintText: 'gsk_... veya hf_... veya sk-or-...',
+                  hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 12),
                   filled: true,
                   fillColor: AppColors.surfaceVariant,
                   border: OutlineInputBorder(
@@ -248,8 +246,8 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                   SnackBar(
                     content: Text(
                       AppConfig.hasValidHfToken
-                          ? '✅ Hugging Face Token kaydedildi. Canlı model devrede!'
-                          : '⚠️ Token formatı kontrol edilmeli (hf_ ile başlamalı).',
+                          ? '✅ API Token kaydedildi. Canlı model devrede!'
+                          : '⚠️ Token formatı kontrol edilmeli (gsk_, hf_ veya sk-or-).',
                     ),
                     backgroundColor: AppConfig.hasValidHfToken
                         ? AppColors.success
@@ -356,7 +354,7 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              isHfConnected ? 'HF Canlı Model' : 'Token Girin',
+                              isHfConnected ? 'Canlı Model Aktif' : 'Token Girin',
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,

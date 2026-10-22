@@ -17,43 +17,47 @@ class AppConfig {
   // ===========================================================================
   // 2. HUGGING FACE API AYARLARI (CHATBOT & PDF UZMAN GÖRÜŞÜ)
   // ===========================================================================
-  /// Hugging Face Access Token (`hf_...` ile başlayan Fine-grained / Read token).
-  /// İster doğrudan buraya yazabilir, ister derleme sırasında
-  /// `--dart-define=HF_TOKEN=hf_xxx` parametresiyle geçebilir,
-  /// istersen de uygulama içi ayarlardan çalışma zamanında güncelleyebilirsin.
+  /// AI API Access Token (Hugging Face `hf_...`, Groq `gsk_...` veya OpenRouter `sk-or-...`).
   static String huggingFaceToken = const String.fromEnvironment(
     'HF_TOKEN',
     defaultValue: 'hf_BURAYA_KENDI_TOKENINI_YAPISTIR',
   );
 
-  /// OpenAI uyumlu yeni nesil Hugging Face Inference Router adresi (Önerilen)
+  /// OpenAI uyumlu yeni nesil Hugging Face Inference Router adresi
   static const String hfRouterChatEndpoint =
       'https://router.huggingface.co/v1/chat/completions';
 
-  /// Model bazlı doğrudan HF Inference uç noktası (Yedek / Fallback)
-  static String get hfDirectModelEndpoint =>
-      'https://router.huggingface.co/hf-inference/models/$selectedHfModel/v1/chat/completions';
+  /// Groq Cloud API adresi (Tamamen Ücretsiz Canlı LLM)
+  static const String groqChatEndpoint =
+      'https://api.groq.com/openai/v1/chat/completions';
 
-  /// Aktif kullanılan sohbet ve analiz uç noktası
-  static String get hfChatEndpoint => hfRouterChatEndpoint;
+  /// OpenRouter API adresi (Tamamen Ücretsiz Canlı Modeller)
+  static const String openRouterChatEndpoint =
+      'https://openrouter.ai/api/v1/chat/completions';
 
-  /// Türkçe başarısı yüksek ve kredi istemeyen ücretsiz Hugging Face serverless modelleri
-  static const String modelQwen7B = 'Qwen/Qwen2.5-7B-Instruct';
-  static const String modelMistral7B = 'mistralai/Mistral-7B-Instruct-v0.3';
-  static const String modelLlama32_3B = 'meta-llama/Llama-3.2-3B-Instruct';
-  static const String modelZephyr7B = 'HuggingFaceH4/zephyr-7b-beta';
-  static const String modelGemma2B = 'google/gemma-2-2b-it';
+  /// Aktif kullanılan sohbet ve analiz uç noktası (Token türüne göre dinamik seçilir)
+  static String get hfChatEndpoint {
+    final t = huggingFaceToken.trim();
+    if (t.startsWith('gsk_')) return groqChatEndpoint;
+    if (t.startsWith('sk-or-')) return openRouterChatEndpoint;
+    return hfRouterChatEndpoint;
+  }
 
-  /// Varsayılan aktif model (Kredisiz, ücretsiz serverless çalışan model)
-  static String selectedHfModel = modelQwen7B;
+  /// Hugging Face Router'ında aktif olan resmi modeller
+  static const String modelLlama31_8B = 'meta-llama/Llama-3.1-8B-Instruct';
+  static const String modelDeepSeekR1 = 'deepseek-ai/DeepSeek-R1';
+  static const String modelGptOss120B = 'openai/gpt-oss-120b';
+  static const String modelQwen3 = 'Qwen/Qwen3.8-27B';
 
-  /// Yedek model listesi (Birincil model meşgul/hata verirse sırayla denenir)
+  /// Varsayılan aktif model
+  static String selectedHfModel = modelLlama31_8B;
+
+  /// Yedek model listesi (Sırayla denenir)
   static const List<String> fallbackHfModels = <String>[
-    modelQwen7B,
-    modelMistral7B,
-    modelLlama32_3B,
-    modelZephyr7B,
-    modelGemma2B,
+    modelLlama31_8B,
+    modelDeepSeekR1,
+    modelQwen3,
+    modelGptOss120B,
   ];
 
   /// AI yanıt üretim parametreleri
@@ -61,11 +65,13 @@ class AppConfig {
   static const int aiMaxTokens = 700;
   static const Duration apiTimeout = Duration(seconds: 25);
 
-  /// Geçerli bir Hugging Face Token girilip girilmediğini kontrol eder
+  /// Geçerli bir AI API Token girilip girilmediğini kontrol eder
   static bool get hasValidHfToken {
     final String cleaned = huggingFaceToken.trim();
     return cleaned.isNotEmpty &&
-        cleaned.startsWith('hf_') &&
+        (cleaned.startsWith('hf_') ||
+            cleaned.startsWith('gsk_') ||
+            cleaned.startsWith('sk-or-')) &&
         !cleaned.contains('BURAYA_KENDI_TOKENINI');
   }
 
