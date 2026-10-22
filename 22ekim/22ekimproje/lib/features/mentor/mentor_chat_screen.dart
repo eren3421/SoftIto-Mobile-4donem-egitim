@@ -185,27 +185,46 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
             borderRadius: BorderRadius.circular(20),
             side: const BorderSide(color: AppColors.primary),
           ),
-          title: Text(
-            'Hugging Face API Ayarı',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          title: Row(
+            children: [
+              const Icon(Icons.psychology, color: AppColors.accent, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                'Hugging Face Canlı Model',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Kendi Hugging Face User Access Token bilginizi girebilirsiniz. Boş bırakırsanız yüksek kaliteli yerel uzman koçluk algoritması devrede kalır.',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                'Arka plandaki yapay zeka modelinin (Qwen 2.5 72B / Mistral 7B) canlı olarak cevap üretmesi için Hugging Face "Read" tokeninizi buraya yapıştırın.',
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.4),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
+              const Text(
+                'Ücretsiz token almak için: huggingface.co/settings/tokens',
+                style: TextStyle(color: AppColors.softPink, fontSize: 11, fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 14),
               TextField(
                 controller: tokenController,
                 style: const TextStyle(color: AppColors.textPrimary),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'hf_xxxxxxxxxxxxxxxxxxxxxx',
+                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  filled: true,
+                  fillColor: AppColors.surfaceVariant,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
                 ),
               ),
             ],
@@ -216,17 +235,29 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
               child: const Text('İptal', style: TextStyle(color: AppColors.textMuted)),
             ),
             ElevatedButton(
-              onPressed: () {
-                AppConfig.huggingFaceToken = tokenController.text.trim();
-                Navigator.of(ctx).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Hugging Face Token kaydedildi.'),
-                    backgroundColor: AppColors.success,
+              onPressed: () async {
+                final nav = Navigator.of(ctx);
+                final messenger = ScaffoldMessenger.of(context);
+                final input = tokenController.text.trim();
+                AppConfig.huggingFaceToken = input;
+                await HiveStorageService.instance.setHfToken(input);
+                if (!mounted) return;
+                setState(() {});
+                nav.pop();
+                messenger.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      AppConfig.hasValidHfToken
+                          ? '✅ Hugging Face Token kaydedildi. Canlı model devrede!'
+                          : '⚠️ Token formatı kontrol edilmeli (hf_ ile başlamalı).',
+                    ),
+                    backgroundColor: AppConfig.hasValidHfToken
+                        ? AppColors.success
+                        : AppColors.warning,
                   ),
                 );
               },
-              child: const Text('Kaydet'),
+              child: const Text('Kaydet ve Bağlan'),
             ),
           ],
         );
@@ -236,6 +267,8 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isHfConnected = AppConfig.hasValidHfToken;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       decoration: const BoxDecoration(
@@ -297,6 +330,44 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                 ),
                 Row(
                   children: [
+                    // Model Bağlantı Durumu Rozeti
+                    InkWell(
+                      onTap: _showTokenConfigDialog,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isHfConnected
+                              ? AppColors.success.withValues(alpha: 0.15)
+                              : AppColors.warning.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isHfConnected ? AppColors.success : AppColors.warning,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isHfConnected ? Icons.circle : Icons.warning_amber_rounded,
+                              size: 10,
+                              color: isHfConnected ? AppColors.success : AppColors.warning,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isHfConnected ? 'HF Canlı Model' : 'Token Girin',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: isHfConnected ? AppColors.success : AppColors.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     IconButton(
                       icon: const Icon(Icons.key, color: AppColors.softPink, size: 20),
                       tooltip: 'HF API Token Ayarı',
@@ -311,6 +382,40 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
               ],
             ),
           ),
+
+          // Token Girilmemişse Bilgilendirme ve Hızlı Ayar Şeridi
+          if (!isHfConnected)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: AppColors.primaryVariant.withValues(alpha: 0.9),
+              child: Row(
+                children: [
+                  const Icon(Icons.flash_on, size: 16, color: AppColors.accent),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Canlı Hugging Face modeli için token tanımlayınız.',
+                      style: TextStyle(fontSize: 11, color: AppColors.textPrimary),
+                    ),
+                  ),
+                  InkWell(
+                    onTap: _showTokenConfigDialog,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        'Token Ayarla',
+                        style: TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
 
           // Mesajlar Alanı
           Expanded(
@@ -351,6 +456,30 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                 ],
               ),
             ),
+
+          // Hızlı Soru Önerileri (Quick Prompts)
+          Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            decoration: const BoxDecoration(
+              color: AppColors.surface,
+              border: Border(top: BorderSide(color: AppColors.border, width: 0.5)),
+            ),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _buildQuickChip('⚡ Bugün enerjim yok'),
+                _buildQuickChip('🎯 2 Dakika Kuralı nedir?'),
+                _buildQuickChip('🔄 Dün zinciri bozdum'),
+                _buildQuickChip('📚 Kitap okuma taktiği'),
+                _buildQuickChip('⏰ Sabah erken kalkma tüyosu'),
+                _buildQuickChip('📋 Günlük rutin öner'),
+                _buildQuickChip('💧 Su içmeyi unutuyorum'),
+                _buildQuickChip('⏳ 21 gün kuralı doğru mu?'),
+              ],
+            ),
+          ),
 
           // Mesaj Yazma Çubuğu
           Container(
@@ -437,7 +566,7 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   )
@@ -460,7 +589,7 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
                     DateFormat('HH:mm').format(message.timestamp),
                     style: TextStyle(
                       color: isMe
-                          ? Colors.white.withOpacity(0.7)
+                          ? Colors.white.withValues(alpha: 0.7)
                           : AppColors.textMuted,
                       fontSize: 10,
                     ),
@@ -470,6 +599,29 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickChip(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: ActionChip(
+        backgroundColor: AppColors.surfaceVariant,
+        side: const BorderSide(color: AppColors.borderHighlight, width: 0.8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        label: Text(
+          text,
+          style: const TextStyle(
+            color: AppColors.softPink,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        onPressed: () {
+          _messageController.text = text;
+          _handleSendMessage();
+        },
       ),
     );
   }

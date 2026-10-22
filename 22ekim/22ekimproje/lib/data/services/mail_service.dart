@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
@@ -32,10 +33,25 @@ class MailService {
     debugPrint('[MAIL SERVICE] Doğrulama Kodu (OTP): $otpCode');
     debugPrint('====================================================');
 
-    // Eğer SMTP yapılandırılmışsa mailer ile gönder
-    if (AppConfig.smtpServer.isNotEmpty &&
-        AppConfig.smtpUsername.isNotEmpty &&
-        AppConfig.smtpPassword.isNotEmpty) {
+    // 1. EmailJS REST API Kontrolü (Web & Mobil için en ideal, doğrudan HTTPS ile Gmail'e iletir)
+    if (AppConfig.hasEmailJsConfig) {
+      final success = await _sendViaEmailJs(
+        toEmail: toEmail,
+        otpCode: otpCode,
+        subject: subject,
+      );
+      if (success) {
+        debugPrint('[MAIL SERVICE] EmailJS ile gerçek e-posta başarıyla iletildi: $toEmail');
+        // Gerçek e-posta başarıyla gittiğinde debug kodunu gizle
+        AppConfig.latestDebugOtp = null;
+        return true;
+      } else {
+        debugPrint('[MAIL SERVICE] EmailJS başarısız oldu, SMTP veya Debug moduna geçiliyor.');
+      }
+    }
+
+    // 2. SMTP Mailer Kontrolü (Web harici Masaüstü/Mobil ortamlar için)
+    if (!kIsWeb && AppConfig.hasSmtpConfig) {
       try {
         final smtpServer = SmtpServer(
           AppConfig.smtpServer,
@@ -65,17 +81,55 @@ class MailService {
           ''';
 
         await send(message, smtpServer);
-        debugPrint('[MAIL SERVICE] SMTP e-postası başarıyla gönderildi.');
+        debugPrint('[MAIL SERVICE] SMTP e-postası başarıyla gönderildi: $toEmail');
+        AppConfig.latestDebugOtp = null;
         return true;
       } catch (e) {
         debugPrint('[MAIL SERVICE] SMTP gönderim hatası (Debug modu devrede): $e');
-        // SMTP başarısız olsa bile kullanıcıyı mağdur etmemek için debug OTP devrededir
-        return true;
       }
     }
 
-    // SMTP yapılandırılmamışsa debug fallback (konsola ve bildirim çubuğuna yazdırılır)
+    // Gerçek e-posta servisi ayarlanmadıysa veya başarısız olduysa test kodunu açık tut
+    debugPrint('[MAIL SERVICE] Gerçek e-posta servisi ayarlanmadığı için Test Kodu devrede.');
     return true;
+  }
+
+  /// EmailJS HTTPS REST API üzerinden gerçek e-posta gönderimi
+  Future<bool> _sendViaEmailJs({
+    required String toEmail,
+    required String otpCode,
+    required String subject,
+  }) async {
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Content-Type': 'application/json'},
+      ));
+
+      final response = await dio.post(
+        AppConfig.emailJsEndpoint,
+        data: {
+          'service_id': AppConfig.emailJsServiceId.trim(),
+          'template_id': AppConfig.emailJsTemplateId.trim(),
+          'user_id': AppConfig.emailJsPublicKey.trim(),
+          'template_params': {
+            'to_email': toEmail,
+            'email': toEmail,
+            'to_name': toEmail.split('@').first,
+            'otp_code': otpCode,
+            'passcode': otpCode,
+            'subject': subject,
+            'message': 'MENTOR doğrulama kodunuz: $otpCode (5 dakika geçerlidir)',
+          },
+        },
+      );
+
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('[MAIL SERVICE] EmailJS API Hatası: $e');
+      return false;
+    }
   }
 
   /// Kullanıcının girdiği OTP kodunu doğrular

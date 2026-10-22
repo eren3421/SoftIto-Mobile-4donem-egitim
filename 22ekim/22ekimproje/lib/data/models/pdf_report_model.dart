@@ -8,6 +8,7 @@ class PdfReportModel {
   final String expertOpinion;
   final double completionRate;
   final DateTime createdAt;
+  final String? pdfBase64;
 
   PdfReportModel({
     required this.id,
@@ -19,6 +20,7 @@ class PdfReportModel {
     required this.expertOpinion,
     required this.completionRate,
     DateTime? createdAt,
+    this.pdfBase64,
   }) : createdAt = createdAt ?? DateTime.now();
 
   bool get isGeneral => habitId == null || habitId!.isEmpty;
@@ -34,6 +36,7 @@ class PdfReportModel {
       'expertOpinion': expertOpinion,
       'completionRate': completionRate,
       'createdAt': createdAt.toIso8601String(),
+      if (pdfBase64 != null) 'pdfBase64': pdfBase64,
     };
   }
 
@@ -50,6 +53,7 @@ class PdfReportModel {
       createdAt: map['createdAt'] != null
           ? DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now()
           : DateTime.now(),
+      pdfBase64: map['pdfBase64'] as String?,
     );
   }
 }

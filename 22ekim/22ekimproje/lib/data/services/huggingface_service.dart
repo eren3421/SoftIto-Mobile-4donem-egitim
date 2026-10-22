@@ -17,7 +17,43 @@ class HuggingFaceService {
     ),
   );
 
-  /// AI Mentor / Chatbot Mesaj Gönderimi
+  /// Hugging Face Chat Completions API Çağrısı (OpenAI uyumlu endpoint)
+  Future<String?> _callHfChatCompletion({
+    required String model,
+    required String token,
+    required List<Map<String, String>> messages,
+    int maxTokens = 600,
+    double temperature = 0.7,
+  }) async {
+    final response = await _dio.post(
+      AppConfig.hfChatEndpoint,
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+      ),
+      data: {
+        'model': model,
+        'messages': messages,
+        'max_tokens': maxTokens,
+        'temperature': temperature,
+      },
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final choices = response.data['choices'] as List?;
+      if (choices != null && choices.isNotEmpty) {
+        final content = choices.first['message']?['content'] as String?;
+        if (content != null && content.trim().isNotEmpty) {
+          return content.trim();
+        }
+      }
+    }
+    return null;
+  }
+
+  /// AI Mentor / Chatbot Mesaj Gönderimi (Doğrudan Canlı Model Bağlantısı)
   Future<String> sendMessage({
     required String userMessage,
     required String habitContext,
@@ -26,11 +62,16 @@ class HuggingFaceService {
   }) async {
     final token = AppConfig.huggingFaceToken.trim();
 
-    if (token.isEmpty) {
-      return _generateLocalMentorResponse(
-        userMessage: userMessage,
-        habitContext: habitContext,
-      );
+    // Token yoksa kullanıcıya açıkça bilgi ver (Hazır cevap stoğu KULLANMA)
+    if (!AppConfig.hasValidHfToken) {
+      return '⚠️ Canlı Hugging Face Modeli Bağlantısı Gerekli!\n\n'
+          'Arka planda hazır cevap stoğu yerine doğrudan açık kaynaklı bir yapay zeka modelinin '
+          '(${AppConfig.selectedHfModel}) çalışıp sorularınıza dinamik cevap üretebilmesi için '
+          'ücretsiz bir Hugging Face Token (hf_...) tanımlanmalıdır.\n\n'
+          '📌 Nasıl Bağlanırsınız?\n'
+          '1. huggingface.co/settings/tokens adresinden ücretsiz bir "Read" token oluşturun.\n'
+          '2. Sağ üstteki 🔑 (Anahtar) simgesine tıklayıp tokeninizi kaydedin.\n\n'
+          'Token kaydedildiğinde tüm sorularınız anlık olarak arkadaki Hugging Face modeline gönderilecek ve canlı yanıtlar üretilecektir.';
     }
 
     try {
@@ -38,7 +79,7 @@ class HuggingFaceService {
           '''Sen MENTOR uygulamasının empatik, motive edici ve disiplinli yapay zeka alışkanlık koçusun. 
 Kullanıcının mevcut alışkanlık verileri: $habitContext. 
 Kullanıcının aldığı son notlar: $notesContext. 
-Kullanıcıya daima Türkçe, yapıcı, mikro adımlara odaklanan ve motivasyonunu artıran samimi yanıtlar ver. Yanıtların çok uzun olmasın, uygulanabilir olsun.''';
+Kullanıcıya daima akıcı ve samimi Türkçe ile, yapıcı, mikro adımlara odaklanan ve motivasyonunu artıran yanıtlar ver. Yanıtların çok uzun olmasın, uygulanabilir ve pratik olsun.''';
 
       final messages = [
         {'role': 'system', 'content': systemPrompt},
@@ -46,38 +87,76 @@ Kullanıcıya daima Türkçe, yapıcı, mikro adımlara odaklanan ve motivasyonu
         {'role': 'user', 'content': userMessage},
       ];
 
-      final response = await _dio.post(
-        AppConfig.hfChatEndpoint,
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-        data: {
-          'model': 'mistralai/Mistral-7B-Instruct-v0.3',
-          'messages': messages,
-          'max_tokens': 600,
-          'temperature': 0.7,
-        },
-      );
+      // Kredisiz, ücretsiz serverless altyapısını (:hf-inference) öncele
+      final modelsToTry = [
+        '${AppConfig.selectedHfModel}:hf-inference',
+        AppConfig.selectedHfModel,
+        'mistralai/Mistral-7B-Instruct-v0.3:hf-inference',
+        'mistralai/Mistral-7B-Instruct-v0.3',
+        'Qwen/Qwen2.5-7B-Instruct:hf-inference',
+        'Qwen/Qwen2.5-7B-Instruct',
+        'meta-llama/Llama-3.2-3B-Instruct:hf-inference',
+        'HuggingFaceH4/zephyr-7b-beta',
+        'google/gemma-2-2b-it',
+      ];
 
-      if (response.statusCode == 200 && response.data != null) {
-        final choices = response.data['choices'] as List?;
-        if (choices != null && choices.isNotEmpty) {
-          final content = choices.first['message']?['content'] as String?;
-          if (content != null && content.trim().isNotEmpty) {
-            return content.trim();
+      String? lastErrorDetail;
+      bool had402CreditError = false;
+
+      for (final model in modelsToTry) {
+        try {
+          debugPrint('[HuggingFaceService] Model çağrılıyor: $model...');
+          final reply = await _callHfChatCompletion(
+            model: model,
+            token: token,
+            messages: messages,
+            maxTokens: 600,
+            temperature: 0.7,
+          );
+
+          if (reply != null && reply.trim().isNotEmpty) {
+            debugPrint('[HuggingFaceService] $model başarıyla yanıt üretti.');
+            return reply;
           }
+        } on DioException catch (dioErr) {
+          final statusCode = dioErr.response?.statusCode;
+          debugPrint('[HuggingFaceService] $model hatası: $statusCode - ${dioErr.message}');
+          if (statusCode == 401) {
+            return '⚠️ Hugging Face Yetkilendirme Hatası (401 Unauthorized):\n\n'
+                'Girdiğiniz Hugging Face Token geçersiz veya yetkisiz görünüyor.\n'
+                'Lütfen huggingface.co/settings/tokens üzerinden aldığınız "Read" yetkili tokeni sağ üstteki 🔑 simgesinden güncelleyiniz.';
+          } else if (statusCode == 402) {
+            had402CreditError = true;
+            debugPrint('[HuggingFaceService] $model ücretli kredi istedi (402). Diğer ücretsiz serverless model deneniyor...');
+            lastErrorDetail = 'HTTP 402: $model için ücretli Inference Provider kredisi istendi.';
+            continue;
+          }
+          lastErrorDetail = 'HTTP $statusCode: ${dioErr.response?.data?['error'] ?? dioErr.message}';
+        } catch (e) {
+          debugPrint('[HuggingFaceService] $model istisna: $e');
+          lastErrorDetail = e.toString();
         }
       }
-      return _generateLocalMentorResponse(
-        userMessage: userMessage,
-        habitContext: habitContext,
-      );
+
+      if (had402CreditError) {
+        return '⚠️ Hugging Face Kredi Uyarısı (HTTP 402 - No Remaining Credits):\n\n'
+            'Hugging Face, kullandığınız token türü için harici sağlayıcı (Inference Providers) kredisi talep ediyor.\n\n'
+            '💡 Bunu 1 Dakikada ÜCRETSİZ Çözmek İçin:\n'
+            '1. https://huggingface.co/settings/tokens adresine gidin.\n'
+            '2. "Create new token" butonuna tıklayın.\n'
+            '3. Token tipi olarak "Fine-grained" yerine doğrudan "Read" (User Access Token) seçin.\n'
+            '   (Eğer Fine-grained oluşturacaksanız sadece "Make calls to the serverless Inference API" seçeneğini işaretleyin).\n'
+            '4. Yeni oluşturulan "hf_..." kodunu kopyalayıp sağ üstteki 🔑 simgesine yapıştırın.\n\n'
+            'Klasik "Read" tokenleri Hugging Face\'in ücretsiz sunucularına doğrudan bağlanır ve kredi istemez.';
+      }
+
+      return '⚠️ Hugging Face Modeline Ulaşılamadı:\n\n'
+          'Arka plandaki model uç noktaları denendi ancak yanıt alınamadı.\n'
+          'Detay: ${lastErrorDetail ?? 'Servis meşgul veya zaman aşımı.'}\n\n'
+          'Lütfen internet bağlantınızı ve sağ üstteki 🔑 token bilginizi kontrol edip tekrar deneyiniz.';
     } catch (e) {
-      debugPrint('[HuggingFaceService] API Çağrısı Başarısız (Yedek Yanıt Devrede): $e');
-      return _generateLocalMentorResponse(
-        userMessage: userMessage,
-        habitContext: habitContext,
-      );
+      debugPrint('[HuggingFaceService] Genel Hata: $e');
+      return '⚠️ Hugging Face Bağlantı Hatası: $e\nLütfen tekrar deneyiniz.';
     }
   }
 
@@ -97,7 +176,7 @@ Kullanıcıya daima Türkçe, yapıcı, mikro adımlara odaklanan ve motivasyonu
     final monthlyPercent = (monthlyRate * 100).toStringAsFixed(1);
     final notesSummary = notes.isEmpty ? 'Kayıtlı not yok.' : notes.take(3).join('; ');
 
-    if (token.isEmpty) {
+    if (!AppConfig.hasValidHfToken) {
       return _generateLocalExpertEvaluation(
         habitName: habitName,
         streak: streak,
@@ -123,31 +202,23 @@ Lütfen şu 3 ana başlık altında profesyonel ve teşvik edici bir uzman rapor
 2) Güçlü Yönler & Gelişim Alanları
 3) Zinciri Kırmamak İçin 3 Somut Tavsiye''';
 
-      final response = await _dio.post(
-        AppConfig.hfChatEndpoint,
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
-        data: {
-          'model': 'mistralai/Mistral-7B-Instruct-v0.3',
-          'messages': [
-            {'role': 'system', 'content': 'Sen kıdemli bir davranış bilimci ve MENTOR uzmanısın.'},
-            {'role': 'user', 'content': prompt},
-          ],
-          'max_tokens': 800,
-          'temperature': 0.65,
-        },
+      final messages = [
+        {'role': 'system', 'content': 'Sen kıdemli bir davranış bilimci ve MENTOR uzmanısın.'},
+        {'role': 'user', 'content': prompt},
+      ];
+
+      final reply = await _callHfChatCompletion(
+        model: AppConfig.selectedHfModel,
+        token: token,
+        messages: messages,
+        maxTokens: 800,
+        temperature: 0.65,
       );
 
-      if (response.statusCode == 200 && response.data != null) {
-        final choices = response.data['choices'] as List?;
-        if (choices != null && choices.isNotEmpty) {
-          final content = choices.first['message']?['content'] as String?;
-          if (content != null && content.trim().isNotEmpty) {
-            return content.trim();
-          }
-        }
+      if (reply != null && reply.trim().isNotEmpty) {
+        return reply;
       }
+
       return _generateLocalExpertEvaluation(
         habitName: habitName,
         streak: streak,
@@ -167,24 +238,7 @@ Lütfen şu 3 ana başlık altında profesyonel ve teşvik edici bir uzman rapor
     }
   }
 
-  // ===================== RESILIENT LOCAL FALLBACKS =====================
-
-  String _generateLocalMentorResponse({
-    required String userMessage,
-    required String habitContext,
-  }) {
-    final lower = userMessage.toLowerCase();
-
-    if (lower.contains('motivasyon') || lower.contains('bırakmak') || lower.contains('zor')) {
-      return 'Unutma ki büyük değişimler küçük ve ısrarcı adımlarla gerçekleşir! Zinciri kırmamak için hedefini mikro parçalara böl (örneğin sadece 5 dakika odaklan). $habitContext verilerine göre harika bir potansiyelin var. Bugün yapacağın tek bir dokunuş bile yarınki seni inşa ediyor!';
-    } else if (lower.contains('streak') || lower.contains('zincir')) {
-      return 'Zincir (Streak) disiplini, beynindeki nöronal yolları pekiştirir. Bir gün aksatsan bile ikinci gün kesinlikle geri dön. İki gün üst üste kaçırmamak altın kuraldır!';
-    } else if (lower.contains('tavsiye') || lower.contains('öneri')) {
-      return 'Alışkanlıklarını mevcut rutinlerine bağla (Örn: "Sabah kahvemi içerken kitabımı açacağım"). Bu tetikleyici bağlama yöntemi, irade gücüne olan bağımlılığı %60 oranında azaltır. Notlar bölümüne her gün hissettiklerini yazmayı ihmal etme!';
-    } else {
-      return 'Harika bir soru! MENTOR olarak gelişimini yakından takip ediyorum. Alışkanlıklarındaki mevcut durum ($habitContext) gösteriyor ki istikrarlı adımlarla hedefine yaklaşıyorsun. Sana tavsiyem, günün en sakin saatinde belirlediğin hedefe odaklanman ve başarıyı kutlaman!';
-    }
-  }
+  // ===================== PDF RAPORLARI İÇİN YEREL DEĞERLENDİRME =====================
 
   String _generateLocalExpertEvaluation({
     required String habitName,

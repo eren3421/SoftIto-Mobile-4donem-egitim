@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:open_filex/open_filex.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 
 import '../local/hive_storage_service.dart';
@@ -75,10 +78,32 @@ class PdfGeneratorService {
     const softPinkBg = PdfColor.fromInt(0xFFFCE4EC);
     const textGray = PdfColor.fromInt(0xFF555555);
 
+    // Font yükleme (Türkçe karakter desteği için Roboto)
+    pw.ThemeData? theme;
+    try {
+      final fontRegular = await PdfGoogleFonts.robotoRegular();
+      final fontBold = await PdfGoogleFonts.robotoBold();
+      final fontItalic = await PdfGoogleFonts.robotoItalic();
+      theme = pw.ThemeData.withFont(
+        base: fontRegular,
+        bold: fontBold,
+        italic: fontItalic,
+      );
+    } catch (e) {
+      debugPrint('[PdfGeneratorService] Font yükleme hatası: $e');
+    }
+
+    final String cleanExpertOpinion = expertOpinion.trim().isNotEmpty
+        ? expertOpinion.trim()
+        : (isGeneral
+            ? 'Genel performans verileriniz değerlendirildiğinde, günlük rutinlerinize sadık kalarak zinciri kırmamaya özen göstermeniz önerilmektedir. Küçük ve istikrarlı adımlarla hedeflerinize ulaşabilirsiniz.\n\n1. Mevcut Performans: Başarı grafiği incelendiğinde özellikle haftalık ritmin korunması önemlidir.\n2. Güçlü Yönler: Belirlenen hedeflerde süreklilik sağlandıkça zincir rekorları artacaktır.\n3. Tavsiyeler: Günlük hatırlatıcıları aktif kullanın ve küçük adımlarla başlayın.'
+            : '${habit.title} alışkanlığınız için düzenli takip ve yüksek devamlılık başarının anahtarıdır. Alışkanlığınızı günün belirli bir saatine bağlayarak zincirinizi koruyun.\n\n1. Rutin Analizi: Günlük tamamlamaları aksatmadan sürdürmek en kritik unsurdur.\n2. Güçlü Yönler: Zincir serisi arttıkça alışkanlık kalıcı hale gelecektir.\n3. Tavsiyeler: Her gün aynı zaman diliminde tamamlamaya özen gösterin.');
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(28),
+        theme: theme,
         build: (pw.Context context) {
           return [
             // ================= ÜST BİLGİ BANDI (HEADER) =================
@@ -154,9 +179,9 @@ class PdfGeneratorService {
             // ================= 1. BÖLÜM: ÖZET METRİK KUTULARI =================
             pw.Row(
               children: [
-                _buildMetricCard('Aktif Zincir', '$streak Gün', vibrantPink, '🔥 Mevcut Seri'),
+                _buildMetricCard('Aktif Zincir', '$streak Gün', vibrantPink, 'Mevcut Seri'),
                 pw.SizedBox(width: 8),
-                _buildMetricCard('En Uzun Zincir', '$longestStreak Gün', primaryPink, '🏆 Rekor'),
+                _buildMetricCard('En Uzun Zincir', '$longestStreak Gün', primaryPink, 'En Yüksek Rekor'),
                 pw.SizedBox(width: 8),
                 _buildMetricCard(
                   'Haftalık Başarı',
@@ -174,9 +199,32 @@ class PdfGeneratorService {
               ],
             ),
 
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 16),
 
-            // ================= 2. BÖLÜM: ALIŞKANLIK LİSTESİ / PERFORMANS =================
+            // ================= 2. BÖLÜM: SÜTUN GRAFİĞİ (BAŞARI ORANLARI) =================
+            pw.Text(
+              'Başarı Oranları Dağılımı (Sütun Grafiği)',
+              style: pw.TextStyle(
+                fontSize: 13,
+                fontWeight: pw.FontWeight.bold,
+                color: darkBerry,
+              ),
+            ),
+            pw.SizedBox(height: 8),
+
+            _buildBarChart(
+              overallWeekly: weeklyRate,
+              overallMonthly: monthlyRate,
+              habits: allHabits,
+              isGeneral: isGeneral,
+              specificHabit: habit,
+              weeklyColor: vibrantPink,
+              monthlyColor: darkBerry,
+            ),
+
+            pw.SizedBox(height: 16),
+
+            // ================= 3. BÖLÜM: ALIŞKANLIK LİSTESİ / PERFORMANS =================
             pw.Text(
               isGeneral ? 'Alışkanlık Tamamlama Özeti' : 'Tamamlama Analizi',
               style: pw.TextStyle(
@@ -255,15 +303,14 @@ class PdfGeneratorService {
 
             pw.Container(
               padding: const pw.EdgeInsets.all(14),
-              decoration: pw.BoxDecoration(
+              decoration: const pw.BoxDecoration(
                 color: softPinkBg,
-                borderRadius: pw.BorderRadius.circular(8),
-                border: const pw.Border(
+                border: pw.Border(
                   left: pw.BorderSide(color: primaryPink, width: 4),
                 ),
               ),
               child: pw.Text(
-                expertOpinion,
+                cleanExpertOpinion,
                 style: const pw.TextStyle(
                   fontSize: 10,
                   lineSpacing: 3.5,
@@ -343,17 +390,29 @@ class PdfGeneratorService {
       ),
     );
 
-    // PDF dosyasını diske kaydet
-    final reportsDir = await HiveStorageService.instance.getReportsDirectoryPath();
     final fileName = isGeneral
         ? 'mentor_genel_rapor_$fileDateSuffix.pdf'
         : 'mentor_aliskanlik_${habit.id}_$fileDateSuffix.pdf';
 
-    final file = File('$reportsDir/$fileName');
     final bytes = await pdf.save();
-    await file.writeAsBytes(bytes);
+    final base64String = base64Encode(bytes);
+    String savedFilePath = fileName;
 
-    debugPrint('[PdfGeneratorService] PDF başarıyla kaydedildi: ${file.path}');
+    // Web ortamında yerel dosya sistemi (dart:io File) bulunmadığından doğrudan web URI atanır.
+    if (!kIsWeb) {
+      try {
+        final reportsDir = await HiveStorageService.instance.getReportsDirectoryPath();
+        final file = File('$reportsDir/$fileName');
+        await file.writeAsBytes(bytes);
+        savedFilePath = file.path;
+        debugPrint('[PdfGeneratorService] PDF başarıyla diske kaydedildi: ${file.path}');
+      } catch (e) {
+        debugPrint('[PdfGeneratorService] Dosya kaydetme uyarısı: $e');
+      }
+    } else {
+      savedFilePath = 'web://$fileName';
+      debugPrint('[PdfGeneratorService] Web ortamında PDF belleğe ve Hive veritabanına kaydedildi ($fileName)');
+    }
 
     // Model nesnesi oluştur ve Hive'a kaydet
     final reportModel = PdfReportModel(
@@ -362,10 +421,11 @@ class PdfGeneratorService {
       habitId: habit?.id,
       habitTitle: habit?.title,
       title: title,
-      filePath: file.path,
-      expertOpinion: expertOpinion,
+      filePath: savedFilePath,
+      expertOpinion: cleanExpertOpinion,
       completionRate: weeklyRate,
       createdAt: now,
+      pdfBase64: base64String,
     );
 
     await HiveStorageService.instance.saveReport(reportModel);
@@ -422,5 +482,272 @@ class PdfGeneratorService {
         textAlign: pw.TextAlign.left,
       ),
     );
+  }
+
+  /// Sütun Grafiği (Haftalık & Aylık Başarı Oranları Karşılaştırması)
+  static pw.Widget _buildBarChart({
+    required double overallWeekly,
+    required double overallMonthly,
+    required List<HabitModel> habits,
+    required bool isGeneral,
+    required HabitModel? specificHabit,
+    required PdfColor weeklyColor,
+    required PdfColor monthlyColor,
+  }) {
+    final List<Map<String, dynamic>> chartItems = [];
+
+    if (isGeneral) {
+      chartItems.add({
+        'title': 'Genel',
+        'weekly': overallWeekly.clamp(0.0, 1.0),
+        'monthly': overallMonthly.clamp(0.0, 1.0),
+      });
+      for (final h in habits.take(4)) {
+        chartItems.add({
+          'title': h.title.length > 9 ? '${h.title.substring(0, 8)}..' : h.title,
+          'weekly': h.weeklyCompletionRate.clamp(0.0, 1.0),
+          'monthly': h.monthlyCompletionRate.clamp(0.0, 1.0),
+        });
+      }
+    } else if (specificHabit != null) {
+      chartItems.add({
+        'title': specificHabit.title.length > 12
+            ? '${specificHabit.title.substring(0, 11)}..'
+            : specificHabit.title,
+        'weekly': specificHabit.weeklyCompletionRate.clamp(0.0, 1.0),
+        'monthly': specificHabit.monthlyCompletionRate.clamp(0.0, 1.0),
+      });
+      chartItems.add({
+        'title': 'Hedef',
+        'weekly': 1.0,
+        'monthly': 1.0,
+      });
+    }
+
+    const double chartMaxHeight = 70.0;
+
+    return pw.Container(
+      padding: const pw.EdgeInsets.all(10),
+      decoration: pw.BoxDecoration(
+        color: const PdfColor.fromInt(0xFFFAFAFA),
+        borderRadius: pw.BorderRadius.circular(8),
+        border: pw.Border.all(color: const PdfColor.fromInt(0xFFE0E0E0), width: 0.8),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Text(
+                'Haftalık ve Aylık Tamamlama Oranları',
+                style: pw.TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: pw.FontWeight.bold,
+                  color: const PdfColor.fromInt(0xFF880E4F),
+                ),
+              ),
+              pw.Row(
+                children: [
+                  pw.Container(
+                    width: 7,
+                    height: 7,
+                    decoration: pw.BoxDecoration(
+                      color: weeklyColor,
+                      borderRadius: pw.BorderRadius.circular(1.5),
+                    ),
+                  ),
+                  pw.SizedBox(width: 4),
+                  pw.Text('Haftalık (%7 Gün)', style: const pw.TextStyle(fontSize: 7.5)),
+                  pw.SizedBox(width: 10),
+                  pw.Container(
+                    width: 7,
+                    height: 7,
+                    decoration: pw.BoxDecoration(
+                      color: monthlyColor,
+                      borderRadius: pw.BorderRadius.circular(1.5),
+                    ),
+                  ),
+                  pw.SizedBox(width: 4),
+                  pw.Text('Aylık (%30 Gün)', style: const pw.TextStyle(fontSize: 7.5)),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 8),
+          pw.Container(
+            height: 95,
+            child: pw.Row(
+              crossAxisAlignment: pw.CrossAxisAlignment.end,
+              children: [
+                pw.Container(
+                  height: 95,
+                  width: 26,
+                  child: pw.Column(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text('%100', style: const pw.TextStyle(fontSize: 6.5, color: PdfColor.fromInt(0xFF888888))),
+                      pw.Text('%50', style: const pw.TextStyle(fontSize: 6.5, color: PdfColor.fromInt(0xFF888888))),
+                      pw.Text('%0', style: const pw.TextStyle(fontSize: 6.5, color: PdfColor.fromInt(0xFF888888))),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(width: 6),
+                pw.Expanded(
+                  child: pw.Stack(
+                    children: [
+                      pw.Column(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Container(height: 0.5, color: const PdfColor.fromInt(0xFFE0E0E0)),
+                          pw.Container(height: 0.5, color: const PdfColor.fromInt(0xFFEEEEEE)),
+                          pw.Container(height: 0.8, color: const PdfColor.fromInt(0xFFBDBDBD)),
+                        ],
+                      ),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: chartItems.map((item) {
+                          final double weeklyVal = item['weekly'] as double;
+                          final double monthlyVal = item['monthly'] as double;
+                          final double weeklyH = (weeklyVal * chartMaxHeight).clamp(4.0, chartMaxHeight);
+                          final double monthlyH = (monthlyVal * chartMaxHeight).clamp(4.0, chartMaxHeight);
+
+                          return pw.Column(
+                            mainAxisAlignment: pw.MainAxisAlignment.end,
+                            children: [
+                              pw.Row(
+                                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                                children: [
+                                  pw.Column(
+                                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                                    children: [
+                                      pw.Text(
+                                        '%${(weeklyVal * 100).round()}',
+                                        style: pw.TextStyle(
+                                          fontSize: 6.5,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: weeklyColor,
+                                        ),
+                                      ),
+                                      pw.SizedBox(height: 2),
+                                      pw.Container(
+                                        width: 14,
+                                        height: weeklyH,
+                                        decoration: pw.BoxDecoration(
+                                          color: weeklyColor,
+                                          borderRadius: const pw.BorderRadius.vertical(
+                                            top: pw.Radius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  pw.SizedBox(width: 3),
+                                  pw.Column(
+                                    mainAxisAlignment: pw.MainAxisAlignment.end,
+                                    children: [
+                                      pw.Text(
+                                        '%${(monthlyVal * 100).round()}',
+                                        style: pw.TextStyle(
+                                          fontSize: 6.5,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: monthlyColor,
+                                        ),
+                                      ),
+                                      pw.SizedBox(height: 2),
+                                      pw.Container(
+                                        width: 14,
+                                        height: monthlyH,
+                                        decoration: pw.BoxDecoration(
+                                          color: monthlyColor,
+                                          borderRadius: const pw.BorderRadius.vertical(
+                                            top: pw.Radius.circular(3),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              pw.SizedBox(height: 4),
+                              pw.Text(
+                                item['title'] as String,
+                                style: pw.TextStyle(
+                                  fontSize: 7.5,
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: const PdfColor.fromInt(0xFF444444),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// PDF Raporunu Tarayıcıda veya İşletim Sisteminde Görüntüler / Önizler
+  static Future<void> openPdf(PdfReportModel report) async {
+    final fileName = '${report.title.replaceAll(RegExp(r'[^\w\s\.-]'), '_')}.pdf';
+
+    // 1. Web ortamında Printing paketi ile doğrudan tarayıcı önizleme ekranını aç
+    if (kIsWeb) {
+      if (report.pdfBase64 != null && report.pdfBase64!.isNotEmpty) {
+        final bytes = base64Decode(report.pdfBase64!);
+        await Printing.layoutPdf(
+          name: fileName,
+          onLayout: (format) async => bytes,
+        );
+      }
+      return;
+    }
+
+    // 2. Mobil / Masaüstü ortamında dosya diskte varsa OpenFilex ile aç
+    if (report.filePath.isNotEmpty && !report.filePath.startsWith('web://')) {
+      final file = File(report.filePath);
+      if (await file.exists()) {
+        try {
+          final result = await OpenFilex.open(report.filePath);
+          if (result.type == ResultType.done) return;
+        } catch (_) {}
+      }
+    }
+
+    // 3. Dosya doğrudan açılamadıysa veya base64 mevcutsa Printing ile önizle
+    if (report.pdfBase64 != null && report.pdfBase64!.isNotEmpty) {
+      final bytes = base64Decode(report.pdfBase64!);
+      await Printing.layoutPdf(
+        name: fileName,
+        onLayout: (format) async => bytes,
+      );
+    }
+  }
+
+  /// PDF Raporunu doğrudan Cihaza / Tarayıcıya İndirir
+  static Future<void> downloadPdf(PdfReportModel report) async {
+    final fileName = '${report.title.replaceAll(RegExp(r'[^\w\s\.-]'), '_')}.pdf';
+    Uint8List? bytes;
+
+    if (report.pdfBase64 != null && report.pdfBase64!.isNotEmpty) {
+      bytes = base64Decode(report.pdfBase64!);
+    } else if (!kIsWeb && report.filePath.isNotEmpty) {
+      final file = File(report.filePath);
+      if (await file.exists()) {
+        bytes = await file.readAsBytes();
+      }
+    }
+
+    if (bytes != null) {
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
+    }
   }
 }

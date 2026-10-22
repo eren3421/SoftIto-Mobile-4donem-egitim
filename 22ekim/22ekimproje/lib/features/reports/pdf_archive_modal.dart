@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:open_filex/open_filex.dart';
+import '../../data/services/pdf_generator_service.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/widgets/custom_pink_button.dart';
@@ -185,13 +185,22 @@ class PdfArchiveModal extends ConsumerWidget {
                                   },
                                 ),
                                 const SizedBox(width: 8),
+                                IconButton(
+                                  tooltip: 'İndir',
+                                  icon: const Icon(Icons.download_rounded,
+                                      size: 20, color: AppColors.accent),
+                                  onPressed: () {
+                                    PdfGeneratorService.downloadPdf(report);
+                                  },
+                                ),
+                                const SizedBox(width: 4),
                                 CustomPinkButton(
                                   text: 'Aç / Görüntüle',
                                   icon: Icons.open_in_new,
                                   height: 36,
                                   fontSize: 12,
                                   onPressed: () {
-                                    OpenFilex.open(report.filePath);
+                                    PdfGeneratorService.openPdf(report);
                                   },
                                 ),
                               ],

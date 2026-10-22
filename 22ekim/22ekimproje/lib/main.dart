@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
+import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
 import 'data/local/hive_storage_service.dart';
 import 'data/repositories/auth_repository.dart';
@@ -21,6 +22,12 @@ Future<void> main() async {
 
   // Yerel depolama (Hive boxes) başlat
   await HiveStorageService.instance.init();
+
+  // Kayıtlı Hugging Face Token varsa AppConfig'e yükle
+  final savedHfToken = HiveStorageService.instance.getHfToken();
+  if (savedHfToken != null && savedHfToken.trim().isNotEmpty) {
+    AppConfig.huggingFaceToken = savedHfToken.trim();
+  }
 
   // Bildirim servisini başlat
   await NotificationService.instance.init();

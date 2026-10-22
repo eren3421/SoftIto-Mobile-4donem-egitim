@@ -95,7 +95,7 @@ class _ForgotPasswordEmailScreenState
                   padding: const EdgeInsets.all(8),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryVariant.withOpacity(0.4),
+                    color: AppColors.primaryVariant.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppColors.primary),
                   ),
@@ -110,6 +110,31 @@ class _ForgotPasswordEmailScreenState
                             color: AppColors.softPink,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1B5E20).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF4CAF50)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.mark_email_read, size: 16, color: Color(0xFF81C784)),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Şifre yenileme kodu e-posta adresinize gönderildi. Gelen kutunuzu veya spam klasörünü kontrol ediniz.',
+                          style: TextStyle(
+                            color: Color(0xFFA5D6A7),
+                            fontSize: 11,
                           ),
                         ),
                       ),

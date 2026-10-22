@@ -83,6 +83,23 @@ class HiveStorageService {
     await _sessionBox.delete('pending_otp_${email.toLowerCase().trim()}');
   }
 
+  // ===================== HUGGING FACE TOKEN PERSISTENCE =====================
+
+  String? getHfToken() {
+    if (!_isInitialized) return null;
+    return _sessionBox.get('hf_api_token') as String?;
+  }
+
+  Future<void> setHfToken(String token) async {
+    if (!_isInitialized) return;
+    final cleaned = token.trim();
+    if (cleaned.isEmpty) {
+      await _sessionBox.delete('hf_api_token');
+    } else {
+      await _sessionBox.put('hf_api_token', cleaned);
+    }
+  }
+
   // ===================== USER OPERATIONS =====================
 
   Future<void> saveUser(UserModel user) async {
@@ -324,6 +341,9 @@ class HiveStorageService {
 
   /// App documents directory for reports
   Future<String> getReportsDirectoryPath() async {
+    if (kIsWeb) {
+      return 'web_reports';
+    }
     final appDocDir = await getApplicationDocumentsDirectory();
     final reportsDir = Directory('${appDocDir.path}/mentor_reports');
     if (!await reportsDir.exists()) {

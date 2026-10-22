@@ -139,10 +139,10 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
             content: Text('PDF Raporu başarıyla oluşturuldu ve saklandı: ${report.title}'),
             backgroundColor: AppColors.success,
             action: SnackBarAction(
-              label: 'Aç',
+              label: 'Görüntüle',
               textColor: Colors.white,
               onPressed: () {
-                OpenFilex.open(report.filePath);
+                PdfGeneratorService.openPdf(report);
               },
             ),
           ),
@@ -430,7 +430,7 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
                         variant: PinkButtonVariant.secondary,
                         icon: Icons.open_in_new,
                         onPressed: () {
-                          OpenFilex.open(_generatedReport!.filePath);
+                          PdfGeneratorService.openPdf(_generatedReport!);
                         },
                       ),
                     ),
