@@ -13,6 +13,7 @@ import '../../data/repositories/note_repository.dart';
 import '../../data/services/notification_service.dart';
 import '../mentor/mentor_chat_screen.dart';
 import '../notes/notes_modal_sheet.dart';
+import '../notifications/notifications_dialog.dart';
 import '../reports/pdf_archive_modal.dart';
 import '../reports/report_preview_dialog.dart';
 import '../settings/legal_and_account_dialog.dart';
@@ -236,19 +237,8 @@ class HomeHabitsScreen extends ConsumerWidget {
               notesCount: notes.length,
               notesTooltip: 'Not Ekle / Notları Görüntüle (Tüm Notlar)',
               documentsTooltip: 'Gizlilik, Belgeler & PDF Arşivi',
-              onNotificationsTap: () async {
-                await NotificationService.instance.showNotification(
-                  title: 'MENTOR Hatırlatıcı',
-                  body: 'Bugünkü alışkanlık zincirini kırmamak için tek dokunuş yapmayı unutma!',
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Hatırlatıcı bildirimi gönderildi!'),
-                      backgroundColor: AppColors.primaryVariant,
-                    ),
-                  );
-                }
+              onNotificationsTap: () {
+                NotificationsDialog.show(context);
               },
               onNotesTap: () {
                 NotesModalSheet.show(context);

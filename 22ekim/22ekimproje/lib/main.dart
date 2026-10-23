@@ -4,6 +4,7 @@ import 'package:intl/date_symbol_data_local.dart';
 
 import 'core/config/app_config.dart';
 import 'core/theme/app_theme.dart';
+import 'core/widgets/in_app_notification_overlay.dart';
 import 'data/local/hive_storage_service.dart';
 import 'data/repositories/auth_repository.dart';
 import 'data/services/notification_service.dart';
@@ -51,6 +52,11 @@ class MentorApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
       home: currentUser != null ? const HomeHabitsScreen() : const LoginScreen(),
+      builder: (context, child) {
+        return InAppNotificationOverlay(
+          child: child ?? const SizedBox(),
+        );
+      },
     );
   }
 }

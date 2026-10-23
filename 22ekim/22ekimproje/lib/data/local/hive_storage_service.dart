@@ -100,6 +100,22 @@ class HiveStorageService {
     }
   }
 
+  // ===================== MAIL CONFIG PERSISTENCE =====================
+
+  Map<String, dynamic>? getMailConfig() {
+    if (!_isInitialized) return null;
+    final map = _sessionBox.get('mail_config');
+    if (map is Map) {
+      return Map<String, dynamic>.from(map);
+    }
+    return null;
+  }
+
+  Future<void> saveMailConfig(Map<String, dynamic> config) async {
+    if (!_isInitialized) return;
+    await _sessionBox.put('mail_config', config);
+  }
+
   // ===================== USER OPERATIONS =====================
 
   Future<void> saveUser(UserModel user) async {
@@ -160,6 +176,27 @@ class HiveStorageService {
     }
     habits.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return habits;
+  }
+
+  List<HabitModel> getAllHabits() {
+    if (!_isInitialized) return [];
+    final List<HabitModel> habits = [];
+    for (final key in _habitsBox.keys) {
+      final map = _habitsBox.get(key);
+      if (map is Map) {
+        habits.add(HabitModel.fromMap(map));
+      }
+    }
+    return habits;
+  }
+
+  Future<void> updateHabitReminder(String habitId, String? reminderTime) async {
+    if (!_isInitialized) return;
+    final habit = getHabitById(habitId);
+    if (habit != null) {
+      final updated = habit.copyWith(reminderTime: reminderTime);
+      await saveHabit(updated);
+    }
   }
 
   HabitModel? getHabitById(String id) {

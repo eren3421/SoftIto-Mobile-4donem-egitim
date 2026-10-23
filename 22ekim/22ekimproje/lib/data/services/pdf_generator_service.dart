@@ -8,10 +8,12 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../core/utils/date_utils.dart';
 import '../local/hive_storage_service.dart';
 import '../models/habit_model.dart';
 import '../models/note_model.dart';
 import '../models/pdf_report_model.dart';
+import 'huggingface_service.dart';
 
 class PdfGeneratorService {
   static final PdfGeneratorService instance = PdfGeneratorService._internal();
@@ -71,6 +73,13 @@ class PdfGeneratorService {
                 allHabits.length)
         : habit.monthlyCompletionRate;
 
+    // Hafta içi vs. Hafta sonu ve Gün Dağılımı Analizi
+    final relevantDates = isGeneral
+        ? allHabits.expand((h) => h.completedDates).toSet().toList()
+        : habit.completedDates;
+    final dayPatterns = HabitDateUtils.analyzeDayPatterns(relevantDates);
+    final String dayPatternsSummary = dayPatterns['summary'] as String;
+
     // Renk paleti (PDF formatı için PdfColor)
     const primaryPink = PdfColor.fromInt(0xFFC2185B);
     const darkBerry = PdfColor.fromInt(0xFF880E4F);
@@ -93,17 +102,54 @@ class PdfGeneratorService {
       debugPrint('[PdfGeneratorService] Font yükleme hatası: $e');
     }
 
-    final String cleanExpertOpinion = expertOpinion.trim().isNotEmpty
-        ? expertOpinion.trim()
-        : (isGeneral
-            ? 'Genel performans verileriniz değerlendirildiğinde, günlük rutinlerinize sadık kalarak zinciri kırmamaya özen göstermeniz önerilmektedir. Küçük ve istikrarlı adımlarla hedeflerinize ulaşabilirsiniz.\n\n1. Mevcut Performans: Başarı grafiği incelendiğinde özellikle haftalık ritmin korunması önemlidir.\n2. Güçlü Yönler: Belirlenen hedeflerde süreklilik sağlandıkça zincir rekorları artacaktır.\n3. Tavsiyeler: Günlük hatırlatıcıları aktif kullanın ve küçük adımlarla başlayın.'
-            : '${habit.title} alışkanlığınız için düzenli takip ve yüksek devamlılık başarının anahtarıdır. Alışkanlığınızı günün belirli bir saatine bağlayarak zincirinizi koruyun.\n\n1. Rutin Analizi: Günlük tamamlamaları aksatmadan sürdürmek en kritik unsurdur.\n2. Güçlü Yönler: Zincir serisi arttıkça alışkanlık kalıcı hale gelecektir.\n3. Tavsiyeler: Her gün aynı zaman diliminde tamamlamaya özen gösterin.');
+    final String cleanExpertOpinion;
+    if (expertOpinion.trim().isNotEmpty) {
+      cleanExpertOpinion = expertOpinion.trim();
+    } else {
+      final weeklyPercentStr = (weeklyRate * 100).toStringAsFixed(1);
+      final monthlyPercentStr = (monthlyRate * 100).toStringAsFixed(1);
+      final notesSummary = notes.isEmpty
+          ? 'Dönem içinde girilmiş özel yansıma notu bulunmuyor.'
+          : notes.take(4).map((n) => '"${n.content}"').join('; ');
+
+      cleanExpertOpinion = HuggingFaceService.instance.generateLocalExpertEvaluation(
+        username: username,
+        habitName: isGeneral ? 'Tüm Alışkanlık Portföyü' : habit.title,
+        streak: streak,
+        longestStreak: longestStreak,
+        weeklyPercent: weeklyPercentStr,
+        monthlyPercent: monthlyPercentStr,
+        notesSummary: notesSummary,
+        isCompletedToday: habit?.isCompletedToday ?? false,
+        dayPatternsSummary: dayPatternsSummary,
+      );
+    }
 
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(28),
         theme: theme,
+        footer: (pw.Context context) {
+          return pw.Column(
+            mainAxisSize: pw.MainAxisSize.min,
+            children: [
+              pw.Divider(color: const PdfColor.fromInt(0xFFE0E0E0), thickness: 0.8),
+              pw.SizedBox(height: 3),
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('MENTOR Habit Tracker System',
+                      style: const pw.TextStyle(fontSize: 8, color: textGray)),
+                  pw.Text(
+                    'Sayfa ${context.pageNumber} / ${context.pagesCount} - MENTOR AI Davranış Analizi',
+                    style: const pw.TextStyle(fontSize: 8, color: textGray),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
         build: (pw.Context context) {
           return [
             // ================= ÜST BİLGİ BANDI (HEADER) =================
@@ -199,7 +245,32 @@ class PdfGeneratorService {
               ],
             ),
 
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 8),
+
+            // Hafta İçi vs. Hafta Sonu Dağılım Şeridi
+            pw.Container(
+              padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: pw.BoxDecoration(
+                color: const PdfColor.fromInt(0xFFFAFAFA),
+                borderRadius: pw.BorderRadius.circular(6),
+                border: pw.Border.all(color: const PdfColor.fromInt(0xFFE0E0E0), width: 0.8),
+              ),
+              child: pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Text('Hafta İçi: %${dayPatterns['weekdayPercent']}',
+                      style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: darkBerry)),
+                  pw.Text('Hafta Sonu: %${dayPatterns['weekendPercent']}',
+                      style: pw.TextStyle(fontSize: 8.5, fontWeight: pw.FontWeight.bold, color: vibrantPink)),
+                  pw.Text('En İstikrarlı Gün: ${dayPatterns['bestDayName']}',
+                      style: const pw.TextStyle(fontSize: 8, color: textGray)),
+                  pw.Text('En Çok Aksayan: ${dayPatterns['worstDayName']}',
+                      style: const pw.TextStyle(fontSize: 8, color: textGray)),
+                ],
+              ),
+            ),
+
+            pw.SizedBox(height: 14),
 
             // ================= 2. BÖLÜM: SÜTUN GRAFİĞİ (BAŞARI ORANLARI) =================
             pw.Text(
@@ -299,27 +370,16 @@ class PdfGeneratorService {
                 color: darkBerry,
               ),
             ),
-            pw.SizedBox(height: 8),
+            pw.SizedBox(height: 6),
 
-            pw.Container(
-              padding: const pw.EdgeInsets.all(14),
-              decoration: const pw.BoxDecoration(
-                color: softPinkBg,
-                border: pw.Border(
-                  left: pw.BorderSide(color: primaryPink, width: 4),
-                ),
-              ),
-              child: pw.Text(
-                cleanExpertOpinion,
-                style: const pw.TextStyle(
-                  fontSize: 10,
-                  lineSpacing: 3.5,
-                  color: PdfColor.fromInt(0xFF333333),
-                ),
-              ),
+            ..._buildExpertOpinionWidgets(
+              expertOpinion: cleanExpertOpinion,
+              primaryPink: primaryPink,
+              softPinkBg: softPinkBg,
+              darkBerry: darkBerry,
             ),
 
-            pw.SizedBox(height: 20),
+            pw.SizedBox(height: 16),
 
             // ================= 4. BÖLÜM: KULLANICI NOTLARI =================
             if (notes.isNotEmpty) ...[
@@ -352,39 +412,25 @@ class PdfGeneratorService {
                               crossAxisAlignment: pw.CrossAxisAlignment.start,
                               children: [
                                 if (note.habitName != null && note.habitName!.isNotEmpty)
-                                  pw.Text('[${note.habitName}]',
-                                      style: pw.TextStyle(
-                                          color: darkBerry,
-                                          fontSize: 9,
-                                          fontWeight: pw.FontWeight.bold)),
-                                pw.Text(note.content,
-                                    style: const pw.TextStyle(fontSize: 9.5)),
-                                pw.Text(
-                                  DateFormat('dd.MM.yyyy').format(note.createdAt),
-                                  style: const pw.TextStyle(fontSize: 8, color: textGray),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-            ],
-
-            pw.Spacer(),
-
-            // Alt Bilgi
-            pw.Divider(color: const PdfColor.fromInt(0xFFE0E0E0)),
-            pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Text('MENTOR Habit Tracker System',
-                    style: const pw.TextStyle(fontSize: 8, color: textGray)),
-                pw.Text('Bu rapor Hugging Face AI desteği ile üretilmiştir.',
-                    style: const pw.TextStyle(fontSize: 8, color: textGray)),
-              ],
-            ),
+                                   pw.Text('[${note.habitName}]',
+                                       style: pw.TextStyle(
+                                           color: darkBerry,
+                                           fontSize: 9,
+                                           fontWeight: pw.FontWeight.bold)),
+                                 pw.Text(note.content,
+                                     style: const pw.TextStyle(fontSize: 9.5)),
+                                 pw.Text(
+                                   DateFormat('dd.MM.yyyy').format(note.createdAt),
+                                   style: const pw.TextStyle(fontSize: 8, color: textGray),
+                                 ),
+                               ],
+                             ),
+                           ),
+                         ],
+                       ),
+                     ),
+                   ),
+             ],
           ];
         },
       ),
@@ -749,5 +795,110 @@ class PdfGeneratorService {
     if (bytes != null) {
       await Printing.sharePdf(bytes: bytes, filename: fileName);
     }
+  }
+
+  /// AI Uzman Görüşünü Sayfa Bölünmelerine (MultiPage) Uyumlu Paragraf ve Başlıklara Dönüştürür
+  static List<pw.Widget> _buildExpertOpinionWidgets({
+    required String expertOpinion,
+    required PdfColor primaryPink,
+    required PdfColor softPinkBg,
+    required PdfColor darkBerry,
+  }) {
+    final List<pw.Widget> widgets = [];
+    final sections = expertOpinion.split(RegExp(r'\n{2,}'));
+
+    for (final section in sections) {
+      final trimmed = section.trim();
+      if (trimmed.isEmpty) continue;
+
+      final lines = trimmed.split('\n');
+      final firstLine = lines.first.trim();
+
+      // Başlık tespiti (Örn: "1. Nörolojik...", "2. Güçlü Yönler...", "### Başlık")
+      final isNumberedHeading = RegExp(r'^\d+\.').hasMatch(firstLine) ||
+          firstLine.startsWith('#') ||
+          (firstLine.endsWith(':') && lines.length > 1);
+
+      if (isNumberedHeading) {
+        final cleanTitle = firstLine.replaceAll(RegExp(r'^#+\s*'), '').trim();
+        widgets.add(
+          pw.Container(
+            margin: const pw.EdgeInsets.only(top: 8, bottom: 4),
+            padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: pw.BoxDecoration(
+              color: softPinkBg,
+              border: pw.Border(left: pw.BorderSide(color: primaryPink, width: 3.5)),
+            ),
+            child: pw.Text(
+              cleanTitle,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: darkBerry,
+              ),
+            ),
+          ),
+        );
+
+        final remainingLines = lines.sublist(1);
+        for (final line in remainingLines) {
+          final l = line.trim();
+          if (l.isEmpty) continue;
+          if (l.startsWith('•') || l.startsWith('-') || l.startsWith('*')) {
+            widgets.add(
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 8, bottom: 3),
+                child: pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('• ',
+                        style: pw.TextStyle(
+                            color: primaryPink,
+                            fontWeight: pw.FontWeight.bold,
+                            fontSize: 9.5)),
+                    pw.Expanded(
+                      child: pw.Text(
+                        l.replaceFirst(RegExp(r'^[•\-\*]\s*'), ''),
+                        style: const pw.TextStyle(
+                          fontSize: 9,
+                          lineSpacing: 2.2,
+                          color: PdfColor.fromInt(0xFF333333),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else {
+            widgets.add(
+              pw.Paragraph(
+                text: l,
+                style: const pw.TextStyle(
+                  fontSize: 9,
+                  lineSpacing: 2.4,
+                  color: PdfColor.fromInt(0xFF333333),
+                ),
+                margin: const pw.EdgeInsets.only(bottom: 4),
+              ),
+            );
+          }
+        }
+      } else {
+        widgets.add(
+          pw.Paragraph(
+            text: trimmed,
+            style: const pw.TextStyle(
+              fontSize: 9,
+              lineSpacing: 2.4,
+              color: PdfColor.fromInt(0xFF333333),
+            ),
+            margin: const pw.EdgeInsets.only(bottom: 4),
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 }

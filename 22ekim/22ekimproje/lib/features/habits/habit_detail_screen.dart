@@ -10,6 +10,7 @@ import '../../data/repositories/note_repository.dart';
 import '../../data/services/notification_service.dart';
 import '../mentor/mentor_chat_screen.dart';
 import '../notes/notes_modal_sheet.dart';
+import '../notifications/notifications_dialog.dart';
 import '../reports/pdf_archive_modal.dart';
 import '../reports/report_preview_dialog.dart';
 import '../settings/legal_and_account_dialog.dart';
@@ -179,6 +180,107 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
+
+                          // 3. Günlük Hatırlatıcı Kartı
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: habit.reminderTime != null
+                                    ? AppColors.accent.withOpacity(0.5)
+                                    : AppColors.border,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: habit.reminderTime != null
+                                        ? AppColors.accent.withOpacity(0.15)
+                                        : AppColors.surfaceVariant,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    habit.reminderTime != null ? Icons.alarm_on : Icons.alarm_off,
+                                    color: habit.reminderTime != null ? AppColors.accent : AppColors.textMuted,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Günlük Hatırlatıcı Saati',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        habit.reminderTime != null
+                                            ? 'Her gün ${habit.reminderTime!} saatinde masaüstü pop-up ve alarm gönderilir.'
+                                            : 'Bu alışkanlık için henüz bir saat belirlenmedi.',
+                                        style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: AppColors.accent,
+                                    backgroundColor: AppColors.surfaceVariant,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      side: const BorderSide(color: AppColors.accent, width: 1),
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.edit_calendar, size: 14),
+                                  label: Text(
+                                    habit.reminderTime != null ? 'Değiştir' : 'Saat Ekle',
+                                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                                  ),
+                                  onPressed: () async {
+                                    final initial = habit.reminderTime != null
+                                        ? _parseTime(habit.reminderTime!)
+                                        : const TimeOfDay(hour: 20, minute: 0);
+
+                                    final picked = await showTimePicker(
+                                      context: context,
+                                      initialTime: initial,
+                                      builder: (context, child) {
+                                        return Theme(
+                                          data: ThemeData.dark().copyWith(
+                                            colorScheme: const ColorScheme.dark(
+                                              primary: AppColors.primary,
+                                              surface: AppColors.surface,
+                                              onSurface: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                          child: child!,
+                                        );
+                                      },
+                                    );
+
+                                    if (picked != null) {
+                                      final hour = picked.hour.toString().padLeft(2, '0');
+                                      final minute = picked.minute.toString().padLeft(2, '0');
+                                      await ref.read(habitsListProvider.notifier).updateReminderTime(
+                                            habit.id,
+                                            '$hour:$minute',
+                                          );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
                         ],
                       ),
                     ),
@@ -239,19 +341,8 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
               notesCount: habitNotes.length,
               notesTooltip: 'Bu Alışkanlığa Özel Not Ekle / Görüntüle',
               documentsTooltip: 'Bu Alışkanlığa Ait Kayıtlı PDF Raporları',
-              onNotificationsTap: () async {
-                await NotificationService.instance.showNotification(
-                  title: 'Alışkanlık Hatırlatıcısı',
-                  body: '"${habit.title}" alışkanlığını bugün tamamladın mı?',
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('"${habit.title}" için hatırlatıcı gönderildi!'),
-                      backgroundColor: AppColors.primaryVariant,
-                    ),
-                  );
-                }
+              onNotificationsTap: () {
+                NotificationsDialog.show(context, specificHabit: habit);
               },
               onNotesTap: () {
                 NotesModalSheet.show(context, specificHabit: habit);
@@ -318,5 +409,14 @@ class _HabitDetailScreenState extends ConsumerState<HabitDetailScreen> {
         ),
       ],
     );
+  }
+
+  TimeOfDay _parseTime(String timeStr) {
+    try {
+      final parts = timeStr.split(':');
+      return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+    } catch (_) {
+      return const TimeOfDay(hour: 20, minute: 0);
+    }
   }
 }

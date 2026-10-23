@@ -2,9 +2,9 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:open_filex/open_filex.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/utils/date_utils.dart';
 import '../../core/widgets/custom_pink_button.dart';
 import '../../data/models/habit_model.dart';
 import '../../data/models/pdf_report_model.dart';
@@ -38,6 +38,7 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
   bool _isGeneratingPdf = false;
   String _expertOpinion = '';
   PdfReportModel? _generatedReport;
+  Map<String, dynamic>? _dayPatterns;
 
   @override
   void initState() {
@@ -55,12 +56,14 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
     double weeklyRate;
     double monthlyRate;
     List<String> noteContents;
+    List<String> relevantDates;
 
     if (habit != null) {
       streak = habit.currentStreak;
       longest = habit.longestStreak;
       weeklyRate = habit.weeklyCompletionRate;
       monthlyRate = habit.monthlyCompletionRate;
+      relevantDates = habit.completedDates;
       noteContents = allNotes
           .where((n) => n.habitId == habit.id)
           .map((n) => n.content)
@@ -83,20 +86,28 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
                   .map((h) => h.monthlyCompletionRate)
                   .reduce((a, b) => a + b) /
               allHabits.length);
+      relevantDates = allHabits.expand((h) => h.completedDates).toSet().toList();
       noteContents = allNotes.map((n) => n.content).toList();
     }
 
+    final dayPatterns = HabitDateUtils.analyzeDayPatterns(relevantDates);
+
+    final user = ref.read(currentUserProvider);
     final opinion = await HuggingFaceService.instance.generateExpertEvaluation(
+      username: user?.username ?? 'Kullanıcı',
       habitTitle: habit?.title,
       streak: streak,
       longestStreak: longest,
       weeklyRate: weeklyRate,
       monthlyRate: monthlyRate,
       notes: noteContents,
+      isCompletedToday: habit?.isCompletedToday ?? false,
+      dayPatternsSummary: dayPatterns['summary'] as String?,
     );
 
     if (mounted) {
       setState(() {
+        _dayPatterns = dayPatterns;
         _expertOpinion = opinion;
         _isLoadingAi = false;
       });
@@ -350,7 +361,65 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
 
                     // Aktivite Izgarası (Heatmap)
                     GithubHeatmapGrid(completedDates: completedDates, weeksCount: 8),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
+
+                    // Hafta İçi vs. Hafta Sonu Dağılım Kartı
+                    if (_dayPatterns != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.date_range_rounded, color: AppColors.accent, size: 16),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Zaman & Gün Analizi (Hafta İçi vs. Hafta Sonu)',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildPatternMiniStat(
+                                  'Hafta İçi',
+                                  '%${_dayPatterns!['weekdayPercent']}',
+                                  AppColors.accent,
+                                ),
+                                _buildPatternMiniStat(
+                                  'Hafta Sonu',
+                                  '%${_dayPatterns!['weekendPercent']}',
+                                  AppColors.primary,
+                                ),
+                                _buildPatternMiniStat(
+                                  'En İstikrarlı',
+                                  '${_dayPatterns!['bestDayName']}',
+                                  AppColors.success,
+                                ),
+                                _buildPatternMiniStat(
+                                  'En Çok Aksayan',
+                                  '${_dayPatterns!['worstDayName']}',
+                                  AppColors.warning,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
 
                     // Bölüm 2: Uzman Görüşü
                     Row(
@@ -451,6 +520,30 @@ class _ReportPreviewDialogState extends ConsumerState<ReportPreviewDialog> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildPatternMiniStat(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          style: GoogleFonts.plusJakartaSans(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

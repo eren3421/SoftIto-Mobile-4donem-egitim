@@ -7,7 +7,10 @@ import '../../core/theme/app_colors.dart';
 import '../../core/utils/validators.dart';
 import '../../core/widgets/custom_pink_button.dart';
 import '../../data/repositories/auth_repository.dart';
+import '../../data/services/mail_service.dart';
 import '../habits/home_habits_screen.dart';
+import '../settings/mail_settings_dialog.dart';
+import 'widgets/otp_verification_dialog.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -64,155 +67,32 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _showOtpVerificationDialog(String email) {
-    final otpController = TextEditingController();
-    // Test kolaylığı için debug kodunu hazır olarak yazabiliriz
-    if (AppConfig.latestDebugOtp != null) {
-      otpController.text = AppConfig.latestDebugOtp!;
-    }
-
-    showDialog(
+    OtpVerificationDialog.show(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AppColors.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          title: Row(
-            children: [
-              const Icon(Icons.mark_email_read_outlined, color: AppColors.accent),
-              const SizedBox(width: 10),
-              Text(
-                'E-posta Doğrulama',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '$email adresine gönderilen 6 haneli doğrulama kodunu giriniz:',
-                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              if (AppConfig.latestDebugOtp != null)
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryVariant.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.primary),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, size: 16, color: AppColors.accent),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Test OTP Kodu: ${AppConfig.latestDebugOtp}',
-                          style: const TextStyle(
-                            color: AppColors.softPink,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1B5E20).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF4CAF50)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.mark_email_read, size: 16, color: Color(0xFF81C784)),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Doğrulama kodu e-posta adresinize gönderildi. Gelen kutunuzu veya spam klasörünü kontrol ediniz.',
-                          style: TextStyle(
-                            color: Color(0xFFA5D6A7),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              TextFormField(
-                controller: otpController,
-                validator: Validators.validateOtp,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppColors.accent,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 4,
-                ),
-                decoration: const InputDecoration(
-                  hintText: '123456',
-                  counterText: '',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('İptal', style: TextStyle(color: AppColors.textMuted)),
-            ),
-            CustomPinkButton(
-              text: 'Onayla',
-              height: 42,
-              onPressed: () {
-                final isValid = ref.read(authRepositoryProvider).verifyOtpCode(
-                      email,
-                      otpController.text,
-                    );
-                if (isValid) {
-                  Navigator.of(ctx).pop();
-                  final user = ref.read(authRepositoryProvider).getCurrentUser();
-                  ref.read(currentUserProvider.notifier).state = user;
+      email: email,
+      title: 'Hesabınızı Doğrulayın',
+      onVerify: (otp) async {
+        return ref.read(authRepositoryProvider).verifyOtpCode(email, otp);
+      },
+      onResend: () async {
+        final mailService = MailService.instance;
+        final newOtp = mailService.generateOtp();
+        await mailService.sendVerificationEmail(toEmail: email, otpCode: newOtp);
+      },
+      onSuccess: () {
+        final user = ref.read(authRepositoryProvider).getCurrentUser();
+        ref.read(currentUserProvider.notifier).state = user;
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('E-posta başarıyla doğrulandı! Hoş geldiniz.'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('E-posta başarıyla doğrulandı! Hoş geldiniz.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
 
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const HomeHabitsScreen()),
-                    (route) => false,
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Hatalı veya süresi dolmuş kod!'),
-                      backgroundColor: AppColors.danger,
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const HomeHabitsScreen()),
+          (route) => false,
         );
       },
     );

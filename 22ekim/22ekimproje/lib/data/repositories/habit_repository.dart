@@ -52,6 +52,11 @@ class HabitsNotifier extends StateNotifier<List<HabitModel>> {
     refresh();
   }
 
+  Future<void> updateReminderTime(String habitId, String? reminderTime) async {
+    await _repo.updateReminderTime(habitId, reminderTime);
+    refresh();
+  }
+
   Future<void> deleteHabit(String habitId) async {
     await _repo.deleteHabit(habitId);
     refresh();
@@ -85,6 +90,10 @@ class HabitRepository {
     );
     await _storage.saveHabit(habit);
     return habit;
+  }
+
+  Future<void> updateReminderTime(String habitId, String? reminderTime) async {
+    await _storage.updateHabitReminder(habitId, reminderTime);
   }
 
   /// Belirli bir tarihi (Örn: Bugün veya takvimden seçilen bir gün) tamamlandı / tamamlanmadı yap

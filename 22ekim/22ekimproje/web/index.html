@@ -31,6 +31,87 @@
 
   <title>mentor_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Native Web Notifications & Chime Support for Mentor App -->
+  <script>
+    window.MentorNotifications = {
+      isSupported: function() {
+        return ("Notification" in window);
+      },
+      getPermission: function() {
+        if (!("Notification" in window)) return 'unsupported';
+        return Notification.permission;
+      },
+      requestPermission: async function() {
+        if (!("Notification" in window)) return 'unsupported';
+        try {
+          const perm = await Notification.requestPermission();
+          return perm;
+        } catch (e) {
+          console.error("Error requesting permission:", e);
+          return Notification.permission;
+        }
+      },
+      show: function(title, body, iconUrl) {
+        if (!("Notification" in window)) return false;
+        const icon = iconUrl || 'favicon.png';
+        const options = {
+          body: body || '',
+          icon: icon,
+          badge: icon,
+          tag: 'mentor-' + Date.now(),
+          requireInteraction: true,
+          silent: false
+        };
+
+        if (Notification.permission === "granted") {
+          try {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+              navigator.serviceWorker.ready.then(function(reg) {
+                if (reg && reg.showNotification) {
+                  reg.showNotification(title, options);
+                } else {
+                  new Notification(title, options);
+                }
+              }).catch(function() {
+                new Notification(title, options);
+              });
+            } else {
+              const n = new Notification(title, options);
+              n.onclick = function() {
+                window.focus();
+                this.close();
+              };
+            }
+            return true;
+          } catch (e) {
+            console.error("Error displaying notification:", e);
+            return false;
+          }
+        }
+        return false;
+      }
+    };
+
+    window.playNotificationChime = function() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+        osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.18, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.45);
+      } catch (e) {}
+    };
+  </script>
 </head>
 <body>
   <!--

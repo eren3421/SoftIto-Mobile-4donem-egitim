@@ -11,60 +11,145 @@ class MailService {
   static final MailService instance = MailService._internal();
   MailService._internal();
 
-  /// 6 haneli rastgele OTP kodu üretir
+  static const String localRelayUrl = 'http://localhost:3001/api/send-email';
+  static const String localConfigUrl = 'http://localhost:3001/api/config';
+
+  /// 6 haneli rastgele OTP kodu üretir (Debug kodunu sıfırlar)
   String generateOtp() {
     final random = Random();
     final otp = (100000 + random.nextInt(900000)).toString();
-    AppConfig.latestDebugOtp = otp;
+    AppConfig.latestDebugOtp = null; // Demo kodu ekranda göstermemek için null yap
     return otp;
   }
 
-  /// Doğrulama kodunu e-posta adresine gönderir
+  /// E-posta konfigürasyonunu Hive ve yerel relay servisine kaydeder
+  Future<bool> saveSmtpCredentials({
+    required String email,
+    required String appPassword,
+  }) async {
+    final cleanEmail = email.trim();
+    final cleanPass = appPassword.replaceAll(' ', '').trim();
+
+    // 1. Hive'a kaydet
+    await HiveStorageService.instance.saveMailConfig({
+      'smtpUser': cleanEmail,
+      'smtpPass': cleanPass,
+    });
+
+    AppConfig.smtpUsername = cleanEmail;
+    AppConfig.smtpPassword = cleanPass;
+
+    // 2. Node.js yerel köprüsüne bildir
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 4),
+        receiveTimeout: const Duration(seconds: 4),
+      ));
+      await dio.post(localConfigUrl, data: {
+        'smtpUser': cleanEmail,
+        'smtpPass': cleanPass,
+      });
+      debugPrint('[MAIL SERVICE] Yerel relay e-posta ayarları kaydedildi.');
+      return true;
+    } catch (e) {
+      debugPrint('[MAIL SERVICE] Relay config post uyarısı: $e');
+      return true;
+    }
+  }
+
+  /// Kayıtlı e-posta gönderici adresini döndürür
+  String? getSavedSmtpUser() {
+    final cfg = HiveStorageService.instance.getMailConfig();
+    if (cfg != null && cfg['smtpUser'] != null) {
+      return cfg['smtpUser'].toString();
+    }
+    if (AppConfig.smtpUsername.isNotEmpty) {
+      return AppConfig.smtpUsername;
+    }
+    return null;
+  }
+
+  bool isConfigured() {
+    final user = getSavedSmtpUser();
+    final cfg = HiveStorageService.instance.getMailConfig();
+    final pass = cfg?['smtpPass']?.toString() ?? AppConfig.smtpPassword;
+    return user != null && user.isNotEmpty && pass.isNotEmpty;
+  }
+
+  /// Doğrulama kodunu gerçek e-posta servisi üzerinden iletir
   Future<bool> sendVerificationEmail({
     required String toEmail,
     required String otpCode,
     String subject = 'MENTOR - E-posta Doğrulama Kodu',
   }) async {
-    // Kodu yerel session'a kaydet
-    await HiveStorageService.instance.savePendingOtp(toEmail, otpCode);
+    final cleanTo = toEmail.trim();
+
+    // Kodu doğrulanmak üzere yerel oturuma kaydet
+    await HiveStorageService.instance.savePendingOtp(cleanTo, otpCode);
 
     debugPrint('====================================================');
-    debugPrint('[MAIL SERVICE] Gönderilen E-posta: $toEmail');
-    debugPrint('[MAIL SERVICE] Doğrulama Kodu (OTP): $otpCode');
+    debugPrint('[MAIL SERVICE] Gerçek E-posta İletim İsteği: $cleanTo');
     debugPrint('====================================================');
 
-    // 1. EmailJS REST API Kontrolü (Web & Mobil için en ideal, doğrudan HTTPS ile Gmail'e iletir)
+    final cfg = HiveStorageService.instance.getMailConfig();
+    final smtpUser = cfg?['smtpUser']?.toString() ?? AppConfig.smtpUsername;
+    final smtpPass = cfg?['smtpPass']?.toString() ?? AppConfig.smtpPassword;
+
+    // 1. ÖNCELİK: Yerel Node.js Mail Relay (http://localhost:3001)
+    try {
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Content-Type': 'application/json'},
+      ));
+
+      final response = await dio.post(
+        localRelayUrl,
+        data: {
+          'to': cleanTo,
+          'otpCode': otpCode,
+          'subject': subject,
+          'smtpUser': smtpUser.isNotEmpty ? smtpUser : null,
+          'smtpPass': smtpPass.isNotEmpty ? smtpPass : null,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        debugPrint('[MAIL SERVICE] Gerçek e-posta yerel köprü ile gönderildi: $cleanTo');
+        return true;
+      }
+    } catch (e) {
+      debugPrint('[MAIL SERVICE] Yerel relay denendi, hata/uyarı: $e');
+    }
+
+    // 2. ÖNCELİK: EmailJS REST API
     if (AppConfig.hasEmailJsConfig) {
       final success = await _sendViaEmailJs(
-        toEmail: toEmail,
+        toEmail: cleanTo,
         otpCode: otpCode,
         subject: subject,
       );
       if (success) {
-        debugPrint('[MAIL SERVICE] EmailJS ile gerçek e-posta başarıyla iletildi: $toEmail');
-        // Gerçek e-posta başarıyla gittiğinde debug kodunu gizle
-        AppConfig.latestDebugOtp = null;
+        debugPrint('[MAIL SERVICE] EmailJS ile gerçek e-posta iletildi: $cleanTo');
         return true;
-      } else {
-        debugPrint('[MAIL SERVICE] EmailJS başarısız oldu, SMTP veya Debug moduna geçiliyor.');
       }
     }
 
-    // 2. SMTP Mailer Kontrolü (Web harici Masaüstü/Mobil ortamlar için)
-    if (!kIsWeb && AppConfig.hasSmtpConfig) {
+    // 3. ÖNCELİK: Doğrudan Native SMTP (Mobil / Masaüstü ortamlar için)
+    if (!kIsWeb && smtpUser.isNotEmpty && smtpPass.isNotEmpty) {
       try {
         final smtpServer = SmtpServer(
           AppConfig.smtpServer,
           port: AppConfig.smtpPort,
-          username: AppConfig.smtpUsername,
-          password: AppConfig.smtpPassword,
+          username: smtpUser,
+          password: smtpPass,
           ssl: AppConfig.smtpPort == 465,
           allowInsecure: true,
         );
 
         final message = Message()
-          ..from = Address(AppConfig.smtpSenderEmail, AppConfig.appName)
-          ..recipients.add(toEmail)
+          ..from = Address(smtpUser, AppConfig.appName)
+          ..recipients.add(cleanTo)
           ..subject = subject
           ..html = '''
             <div style="font-family: Arial, sans-serif; background-color: #12090E; padding: 24px; color: #FCE4EC; border-radius: 12px;">
@@ -81,17 +166,17 @@ class MailService {
           ''';
 
         await send(message, smtpServer);
-        debugPrint('[MAIL SERVICE] SMTP e-postası başarıyla gönderildi: $toEmail');
-        AppConfig.latestDebugOtp = null;
+        debugPrint('[MAIL SERVICE] SMTP e-postası başarıyla gönderildi: $cleanTo');
         return true;
       } catch (e) {
-        debugPrint('[MAIL SERVICE] SMTP gönderim hatası (Debug modu devrede): $e');
+        debugPrint('[MAIL SERVICE] Native SMTP hatası: $e');
       }
     }
 
-    // Gerçek e-posta servisi ayarlanmadıysa veya başarısız olduysa test kodunu açık tut
-    debugPrint('[MAIL SERVICE] Gerçek e-posta servisi ayarlanmadığı için Test Kodu devrede.');
-    return true;
+    // Gerçek e-posta gönderilemediyse kullanıcıya açık ve net hata bildir
+    throw Exception(
+      'Gerçek e-posta gönderilemedi! Lütfen e-posta servis ayarlarınızı (Gmail & Google Uygulama Şifresi) kontrol ediniz.',
+    );
   }
 
   /// EmailJS HTTPS REST API üzerinden gerçek e-posta gönderimi
@@ -134,18 +219,13 @@ class MailService {
 
   /// Kullanıcının girdiği OTP kodunu doğrular
   bool verifyOtp(String email, String enteredOtp) {
-    final pending = HiveStorageService.instance.getPendingOtp(email);
+    final pending = HiveStorageService.instance.getPendingOtp(email.trim());
     if (pending == null) {
-      // Yedek kontrol: Eğer debug OTP ile birebir eşleşiyorsa izin ver
-      if (AppConfig.latestDebugOtp != null &&
-          AppConfig.latestDebugOtp == enteredOtp.trim()) {
-        return true;
-      }
       return false;
     }
     final isMatch = pending.trim() == enteredOtp.trim();
     if (isMatch) {
-      HiveStorageService.instance.clearPendingOtp(email);
+      HiveStorageService.instance.clearPendingOtp(email.trim());
     }
     return isMatch;
   }

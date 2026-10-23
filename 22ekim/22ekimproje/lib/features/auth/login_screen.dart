@@ -9,6 +9,7 @@ import '../../data/repositories/auth_repository.dart';
 import 'forgot_password_email_screen.dart';
 import 'register_screen.dart';
 import '../habits/home_habits_screen.dart';
+import '../settings/mail_settings_dialog.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -203,6 +204,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.textSecondary,
                         ),
                       ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // E-posta Servis Ayarları
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textMuted,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      ),
+                      icon: const Icon(Icons.settings_outlined, size: 14),
+                      label: const Text(
+                        'E-posta Servis Ayarları (Gmail)',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                      onPressed: () {
+                        MailSettingsDialog.show(context);
+                      },
                     ),
                   ],
                 ),

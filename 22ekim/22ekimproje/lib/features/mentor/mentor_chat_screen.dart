@@ -63,10 +63,10 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
     setState(() {
       _messages.addAll(history);
       if (_messages.isEmpty) {
-        // Hoş geldin mesajı ekle
+        // Kişiselleştirilmiş hoş geldin mesajı ekle
         final welcomeMsg = widget.specificHabit != null
-            ? 'Merhaba! Ben senin MENTOR koçunum. "${widget.specificHabit!.title}" alışkanlığında ${widget.specificHabit!.currentStreak} günlük bir serin var. Bugün bu alışkanlığı sürdürmek için nasıl hissediyorsun? Sana nasıl destek olabilirim?'
-            : 'Merhaba! Ben MENTOR yapay zeka koçun. Günlük alışkanlıkların, motivasyon serilerin veya hedeflerin hakkında konuşmaya hazırım. Bugün ne üzerine odaklanmak istersin?';
+            ? 'Merhaba ${user.username}! "${widget.specificHabit!.title}" alışkanlığında ${widget.specificHabit!.currentStreak} günlük bir serin var. Bugün ${widget.specificHabit!.isCompletedToday ? "hedefini tamamladın, harika gidiyorsun! 🎉" : "henüz tamamlamadın, ilk mikro adımı birlikte atalım mı? 💪"} Sana nasıl destek olabilirim?'
+            : 'Merhaba ${user.username}! Ben MENTOR yapay zeka koçun. Günlük alışkanlıkların, motivasyon serilerin veya hedeflerin hakkında konuşmaya hazırım. Bugün ne üzerine odaklanmak istersin?';
 
         final initialModel = ChatMessageModel(
           id: const Uuid().v4(),
@@ -118,27 +118,40 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
     await HiveStorageService.instance.saveChatMessage(userMessage);
     _scrollToBottom();
 
-    // Alışkanlık ve Not Bağlamını Hazırla
+    // Alışkanlık, Bugünün Durumu ve Not Bağlamını Hazırla
     String habitContext;
+    String? todayCompletionStatus;
     if (widget.specificHabit != null) {
       final h = widget.specificHabit!;
+      todayCompletionStatus = h.isCompletedToday
+          ? 'Bugün Tamamlandı ✓ (Seri devam ediyor)'
+          : 'Bugün Henüz Yapılmadı ⏳ (Harekete geçilmeli)';
       habitContext =
-          'Seçili Alışkanlık: ${h.title}, Aktif Zincir: ${h.currentStreak} gün, En Uzun Zincir: ${h.longestStreak} gün, Haftalık Başarı: %${(h.weeklyCompletionRate * 100).toStringAsFixed(0)}.';
+          'Seçili Alışkanlık: ${h.title}, Aktif Zincir: ${h.currentStreak} gün, En Uzun Zincir: ${h.longestStreak} gün, Haftalık Başarı: %${(h.weeklyCompletionRate * 100).toStringAsFixed(0)}, Bugünkü Durum: $todayCompletionStatus.';
     } else {
       final habits = ref.read(habitsListProvider);
+      final completedTodayCount = habits.where((h) => h.isCompletedToday).length;
+      todayCompletionStatus = habits.isEmpty
+          ? null
+          : 'Toplam ${habits.length} alışkanlıktan $completedTodayCount tanesi bugün tamamlandı.';
       habitContext = habits.isEmpty
           ? 'Henüz aktif alışkanlık eklenmemiş.'
           : habits
-              .map((h) => '${h.title} (${h.currentStreak} gün streak)')
+              .map((h) =>
+                  '${h.title} (Aktif: ${h.currentStreak} gün, Rekor: ${h.longestStreak} gün, Bugün: ${h.isCompletedToday ? "Tamamlandı ✓" : "Bekliyor ⏳"})')
               .join(', ');
     }
 
-    final notes = ref.read(allNotesProvider);
-    final notesContext = notes.isEmpty
-        ? 'Henüz not eklenmemiş.'
-        : notes.take(3).map((n) => n.content).join('; ');
+    final allNotes = ref.read(allNotesProvider);
+    final relevantNotes = widget.specificHabit != null
+        ? allNotes.where((n) => n.habitId == widget.specificHabit!.id).toList()
+        : allNotes;
 
-    // Önceki konuşma geçmişi (Son 4 mesaj)
+    final notesContext = relevantNotes.isEmpty
+        ? 'Dönem için özel yansıma notu bulunmuyor.'
+        : relevantNotes.take(4).map((n) => '"${n.content}"').join('; ');
+
+    // Önceki konuşma geçmişi (Son 8 mesaj)
     final historyPayload = _messages
         .take(_messages.length - 1)
         .map((m) => {
@@ -149,6 +162,9 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
 
     final aiReplyText = await HuggingFaceService.instance.sendMessage(
       userMessage: text,
+      username: user.username,
+      focusedHabitTitle: widget.specificHabit?.title,
+      todayCompletionStatus: todayCompletionStatus,
       habitContext: habitContext,
       notesContext: notesContext,
       previousMessages: historyPayload,
@@ -467,6 +483,7 @@ class _MentorChatScreenState extends ConsumerState<MentorChatScreen> {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               children: [
+                _buildQuickChip('🔄 Kaldığın yerden devam et'),
                 _buildQuickChip('⚡ Bugün enerjim yok'),
                 _buildQuickChip('🎯 2 Dakika Kuralı nedir?'),
                 _buildQuickChip('🔄 Dün zinciri bozdum'),
