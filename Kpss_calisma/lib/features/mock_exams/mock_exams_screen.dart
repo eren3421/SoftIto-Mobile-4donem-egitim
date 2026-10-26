@@ -1,15 +1,24 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider kütüphanesini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk paleti sabitlerini içe aktarıyoruz
 import '../../core/constants/app_colors.dart';
+// Tarih formatlama yardımcı sınıfını içe aktarıyoruz
 import '../../core/utils/date_utils.dart';
+// Deneme sınavlarını yöneten MockExamProvider'ı içe aktarıyoruz
 import '../../providers/mock_exam_provider.dart';
+// Deneme ekleme modal penceresini içe aktarıyoruz
 import 'widgets/add_mock_exam_sheet.dart';
 
+// Kaydedilen KPSS deneme sınavlarının listesini, özet istatistiklerini ve silme işlemlerini sunan ekran
 class MockExamsScreen extends StatelessWidget {
+  // MockExamsScreen kurucu fonksiyonu
   const MockExamsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // MockExamProvider'ı watch ederek kayıt değişikliklerini dinliyoruz
     final examProv = context.watch<MockExamProvider>();
     final exams = examProv.exams;
     final theme = Theme.of(context);
@@ -18,6 +27,7 @@ class MockExamsScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Deneme Sınavları'),
       ),
+      // Sağ alttaki genişletilmiş deneme ekleme butonu
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => AddMockExamSheet.show(context),
         icon: const Icon(Icons.add),
@@ -25,6 +35,7 @@ class MockExamsScreen extends StatelessWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
       ),
+      // Kayıtlı deneme yoksa boş durum ekranı, varsa özet ve deneme listesi göster
       body: exams.isEmpty
           ? Center(
               child: Column(
@@ -63,7 +74,7 @@ class MockExamsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Summary Banner
+                  // Özet İstatistik Paneli (Ortalama Net, En Yüksek Net, Toplam Deneme)
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
@@ -77,16 +88,19 @@ class MockExamsScreen extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
+                        // Ortalama Net
                         _buildSummaryItem(
                           'Ortalama Net',
                           examProv.averageTotalNet.toStringAsFixed(2),
                         ),
                         Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+                        // En Yüksek Net
                         _buildSummaryItem(
                           'En Yüksek Net',
                           examProv.highestTotalNet.toStringAsFixed(2),
                         ),
                         Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+                        // Toplam Deneme Sayısı
                         _buildSummaryItem(
                           'Toplam Deneme',
                           exams.length.toString(),
@@ -96,12 +110,14 @@ class MockExamsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
 
+                  // Liste Başlığı
                   Text(
                     'Kayıtlı Denemeler',
                     style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 12),
 
+                  // Deneme Sınavları Listesi
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -123,6 +139,7 @@ class MockExamsScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // Deneme Adı, Tarihi, Toplam Neti ve Silme Butonu
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -145,6 +162,7 @@ class MockExamsScreen extends StatelessWidget {
                                     ],
                                   ),
                                 ),
+                                // Toplam Net Rozeti
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                   decoration: BoxDecoration(
@@ -161,6 +179,7 @@ class MockExamsScreen extends StatelessWidget {
                                   ),
                                 ),
                                 const SizedBox(width: 4),
+                                // Denemeyi Silme Butonu
                                 IconButton(
                                   onPressed: () => examProv.deleteExam(exam.id),
                                   icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
@@ -169,9 +188,11 @@ class MockExamsScreen extends StatelessWidget {
                               ],
                             ),
                             const Divider(height: 24),
+                            // Genel Yetenek ve Genel Kültür Net ve Doğru/Yanlış Dağılımı
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
+                                // Genel Yetenek Sütunu
                                 Column(
                                   children: [
                                     Text('Genel Yetenek (GY)', style: theme.textTheme.bodySmall),
@@ -195,6 +216,7 @@ class MockExamsScreen extends StatelessWidget {
                                   height: 36,
                                   color: Colors.grey.withValues(alpha: 0.2),
                                 ),
+                                // Genel Kültür Sütunu
                                 Column(
                                   children: [
                                     Text('Genel Kültür (GK)', style: theme.textTheme.bodySmall),
@@ -215,6 +237,7 @@ class MockExamsScreen extends StatelessWidget {
                                 ),
                               ],
                             ),
+                            // Eğer not girilmişse not kutusu göster
                             if (exam.note != null && exam.note!.isNotEmpty) ...[
                               const SizedBox(height: 12),
                               Container(
@@ -242,6 +265,7 @@ class MockExamsScreen extends StatelessWidget {
     );
   }
 
+  // Özet başlığı ve değerini dikey olarak oluşturan yardımcı metot
   Widget _buildSummaryItem(String label, String value) {
     return Column(
       children: [

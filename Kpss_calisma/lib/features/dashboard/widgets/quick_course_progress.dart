@@ -1,11 +1,18 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Ders renklerini almak için renk sabitlerini içe aktarıyoruz
 import '../../../core/constants/app_colors.dart';
+// Müfredat ve ders ilerleme verilerini sağlayan provider'ı içe aktarıyoruz
 import '../../../providers/curriculum_provider.dart';
 
+// Ana sayfada tüm KPSS derslerinin ilerleme çubuklarını listeleyen hızlı özet kartı bileşeni
 class QuickCourseProgress extends StatelessWidget {
+  // "Tümünü Gör" tıklandığında Konular sekmesine yönlendiren geri çağrım (callback)
   final VoidCallback onNavigateToCurriculum;
 
+  // QuickCourseProgress kurucu fonksiyonu
   const QuickCourseProgress({
     super.key,
     required this.onNavigateToCurriculum,
@@ -13,10 +20,12 @@ class QuickCourseProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Müfredat durumunu provider üzerinden dinliyoruz
     final curriculumProv = context.watch<CurriculumProvider>();
     final courses = curriculumProv.courses;
     final theme = Theme.of(context);
 
+    // Veriler henüz yüklenmemişse veya ders listesi boşsa ekranda yer kaplamayan boş bir kutu döneriz
     if (curriculumProv.isLoading || courses.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -24,9 +33,11 @@ class QuickCourseProgress extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Başlık ve "Tümünü Gör" butonu satırı
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Bölüm başlığı
             const Text(
               'Ders İlerlemeleri',
               style: TextStyle(
@@ -34,6 +45,7 @@ class QuickCourseProgress extends StatelessWidget {
                 fontWeight: FontWeight.w700,
               ),
             ),
+            // Konular ekranına yönlendiren şık buton
             TextButton(
               onPressed: onNavigateToCurriculum,
               style: TextButton.styleFrom(
@@ -52,6 +64,7 @@ class QuickCourseProgress extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        // Derslerin ilerleme çubuklarını barındıran beyaz/koyu kart kutusu
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -64,21 +77,28 @@ class QuickCourseProgress extends StatelessWidget {
             ),
           ),
           child: Column(
+            // Tüm dersleri haritalayarak (map) tek tek dikey satırlar oluşturuyoruz
             children: courses.map((course) {
+              // Dersin tamamlanma yüzdesi (0.0 - 1.0)
               final progress = curriculumProv.getCourseProgress(course.id);
+              // Tamamlanan konu sayısı
               final completed = curriculumProv.getCourseCompletedTopics(course.id);
+              // Toplam alt konu sayısı
               final total = course.topics.length;
+              // Dersi temsil eden renk (Mavi, Mor, Turuncu vb.)
               final courseColor = AppColors.getCourseColor(course.id);
 
               return Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: Column(
                   children: [
+                    // Ders adı ve ilerleme metni (Örn: 5 / 12 (%41))
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
+                            // Ders renginde dairesel simge
                             Container(
                               width: 10,
                               height: 10,
@@ -88,6 +108,7 @@ class QuickCourseProgress extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
+                            // Dersin başlığı
                             Text(
                               course.title,
                               style: const TextStyle(
@@ -97,6 +118,7 @@ class QuickCourseProgress extends StatelessWidget {
                             ),
                           ],
                         ),
+                        // Tamamlanma detayı metni
                         Text(
                           '$completed / $total (%${(progress * 100).toInt()})',
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -107,6 +129,7 @@ class QuickCourseProgress extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 6),
+                    // Dersin renkli çizgisel ilerleme çubuğu
                     ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: LinearProgressIndicator(

@@ -1,28 +1,44 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk sabitlerini içe aktarıyoruz
 import '../../../core/constants/app_colors.dart';
+// Süre formatlama yardımcı sınıfını içe aktarıyoruz
 import '../../../core/utils/date_utils.dart';
+// Müfredat ilerleme sağlayıcısını içe aktarıyoruz
 import '../../../providers/curriculum_provider.dart';
+// Soru ve oturum sağlayıcısını içe aktarıyoruz
 import '../../../providers/question_provider.dart';
 
+// Ana sayfada bugünün özetini (Net, Çalışma Süresi, Doğruluk Oranı, Müfredat) 2x2 grid şeklinde gösteren bileşen
 class TodayStatsGrid extends StatelessWidget {
+  // TodayStatsGrid kurucu fonksiyonu
   const TodayStatsGrid({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Soru ve müfredat verilerini provider üzerinden dinliyoruz
     final questionProv = context.watch<QuestionProvider>();
     final curriculumProv = context.watch<CurriculumProvider>();
 
+    // Bugünün toplam KPSS neti
     final todayNet = questionProv.todayNetScore;
+    // Bugün yapılan toplam doğru sayısı
     final todayCorrect = questionProv.todayTotalCorrect;
+    // Bugün yapılan toplam yanlış sayısı
     final todayWrong = questionProv.todayTotalWrong;
+    // Bugün bırakılan toplam boş sayısı
     final todayEmpty = questionProv.todayTotalEmpty;
+    // Bugün tutulan toplam çalışma süresi (dakika)
     final studyMinutes = questionProv.todayStudyDurationMinutes;
+    // Tüm müfredattaki genel tamamlanma yüzdesi
     final curriculumProgress = (curriculumProv.overallProgress * 100).toInt();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Bölüm başlığı
         const Text(
           'Bugünün Özeti',
           style: TextStyle(
@@ -31,6 +47,7 @@ class TodayStatsGrid extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        // İlk satır: Bugünkü Net ve Çalışma Süresi kartları
         Row(
           children: [
             Expanded(
@@ -59,6 +76,7 @@ class TodayStatsGrid extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        // İkinci satır: Doğruluk Oranı ve Müfredat İlerleme kartları
         Row(
           children: [
             Expanded(
@@ -90,6 +108,7 @@ class TodayStatsGrid extends StatelessWidget {
     );
   }
 
+  // İstatistik kutucuklarını (Metric Card) oluşturan yeniden kullanılabilir metot
   Widget _buildMetricCard(
     BuildContext context, {
     required String title,
@@ -106,6 +125,7 @@ class TodayStatsGrid extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
+          // Koyu veya açık tema sınır rengi
           color: theme.brightness == Brightness.dark
               ? const Color(0xFF334155)
               : const Color(0xFFE2E8F0),
@@ -114,6 +134,7 @@ class TodayStatsGrid extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // İkon ve Başlık satırı
           Row(
             children: [
               Container(
@@ -136,6 +157,7 @@ class TodayStatsGrid extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          // Ana sayısal değer metni
           Text(
             value,
             style: const TextStyle(
@@ -144,6 +166,7 @@ class TodayStatsGrid extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
+          // Alt açıklama veya detay metni
           Text(
             subtitle,
             style: theme.textTheme.bodySmall?.copyWith(fontSize: 11),

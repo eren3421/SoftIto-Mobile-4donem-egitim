@@ -1,19 +1,35 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider kütüphanesini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk sabitlerini içe aktarıyoruz
 import '../../core/constants/app_colors.dart';
+// Uygulama adı ve görsel yolları gibi sabitleri içe aktarıyoruz
 import '../../core/constants/app_constants.dart';
+// Tema değiştirme işlemleri için SettingsProvider'ı içe aktarıyoruz
 import '../../providers/settings_provider.dart';
+// Günlük hedef kartı bileşenini içe aktarıyoruz
 import 'widgets/daily_goal_card.dart';
+// Ders bazlı hızlı ilerleme çubukları bileşenini içe aktarıyoruz
 import 'widgets/quick_course_progress.dart';
+// Bugünün net, çalışma ve istatistik özeti grid bileşenini içe aktarıyoruz
 import 'widgets/today_stats_grid.dart';
 
-
+// KPSS Çalışma Koçu'nun ana sayfası (Dashboard); günlük hedef, hızlı aksiyonlar ve istatistik özetlerini barındırır
 class DashboardScreen extends StatelessWidget {
+  // Konular sekmesine yönlendiren geri çağrım
   final VoidCallback onNavigateToCurriculum;
+
+  // Sayaç sekmesine yönlendiren geri çağrım
   final VoidCallback onNavigateToTimer;
+
+  // Soru ekleme penceresini açan geri çağrım
   final VoidCallback onOpenAddQuestion;
+
+  // Deneme sınavları ekranını açan geri çağrım
   final VoidCallback onOpenMockExams;
 
+  // DashboardScreen kurucu fonksiyonu
   const DashboardScreen({
     super.key,
     required this.onNavigateToCurriculum,
@@ -25,10 +41,13 @@ class DashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // Sayfanın üst çubuğu (AppBar)
       appBar: AppBar(
         titleSpacing: 16,
+        // Uygulama logosu ve başlığını içeren sol bölüm
         title: Row(
           children: [
+            // Köşeleri yuvarlatılmış logo görseli
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
@@ -36,6 +55,7 @@ class DashboardScreen extends StatelessWidget {
                 width: 36,
                 height: 36,
                 fit: BoxFit.cover,
+                // Görsel bulunamazsa yedek okul ikonu kutusu göster
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 36,
                   height: 36,
@@ -48,6 +68,7 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
+            // Uygulama ana adı ve alt sloganı
             const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -71,7 +92,9 @@ class DashboardScreen extends StatelessWidget {
             ),
           ],
         ),
+        // Sağ üstteki işlem butonları
         actions: [
+          // Açık/koyu tema geçiş butonu
           IconButton(
             onPressed: () => context.read<SettingsProvider>().toggleTheme(),
             icon: Icon(
@@ -81,33 +104,34 @@ class DashboardScreen extends StatelessWidget {
             ),
             tooltip: 'Tema Değiştir',
           ),
+          // Deneme sınavları ekranını açan buton
           IconButton(
             onPressed: onOpenMockExams,
             icon: const Icon(Icons.assignment_outlined),
             tooltip: 'Deneme Sınavları',
           ),
         ],
-
       ),
+      // Sayfanın dikey kaydırılabilir ana gövdesi
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        physics: const BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(), // iOS tarzı esnek kaydırma efekti
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Daily Goal Card
+            // 1. Günlük Soru Hedefi Kartı
             const DailyGoalCard(),
             const SizedBox(height: 20),
 
-            // Quick Actions Bar
+            // 2. Hızlı İşlem Butonları (Soru Ekle, Sayaç, Denemeler)
             _buildQuickActions(context),
             const SizedBox(height: 24),
 
-            // Today's Stats Grid
+            // 3. Bugünün İstatistikleri (Net, Süre, Başarı vb.)
             const TodayStatsGrid(),
             const SizedBox(height: 24),
 
-            // Course Progress Overview
+            // 4. KPSS Derslerinin İlerleme Durumu Özeti
             QuickCourseProgress(
               onNavigateToCurriculum: onNavigateToCurriculum,
             ),
@@ -118,9 +142,11 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // Hızlı işlem butonları satırını oluşturan yardımcı metot
   Widget _buildQuickActions(BuildContext context) {
     return Row(
       children: [
+        // Soru Ekle butonu
         Expanded(
           child: _buildActionButton(
             context,
@@ -131,6 +157,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
+        // Sayaç Başlat butonu
         Expanded(
           child: _buildActionButton(
             context,
@@ -141,6 +168,7 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
+        // Deneme Sınavları butonu
         Expanded(
           child: _buildActionButton(
             context,
@@ -154,6 +182,7 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // Tekil hızlı işlem kartını oluşturan yardımcı metot
   Widget _buildActionButton(
     BuildContext context, {
     required String title,

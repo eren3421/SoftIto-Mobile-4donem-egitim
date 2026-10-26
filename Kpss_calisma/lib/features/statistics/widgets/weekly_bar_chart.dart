@@ -1,23 +1,32 @@
+// fl_chart çubuk (bar) grafik kütüphanesini içe aktarıyoruz
 import 'package:fl_chart/fl_chart.dart';
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Renk paleti sabitlerini içe aktarıyoruz
 import '../../../core/constants/app_colors.dart';
+// Gün ve ay formatlama yardımcı sınıfını içe aktarıyoruz
 import '../../../core/utils/date_utils.dart';
 
+// Son 7 günde çözülen soru sayılarını dikey sütun grafiği (BarChart) ile gösteren bileşen
 class WeeklyBarChart extends StatelessWidget {
+  // Son 7 güne ait normalize edilmiş tarih ve soru sayıları haritası
   final Map<DateTime, int> last7DaysData;
 
+  // WeeklyBarChart kurucu fonksiyonu
   const WeeklyBarChart({super.key, required this.last7DaysData});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Haritayı liste formatına çeviriyoruz
     final entries = last7DaysData.entries.toList();
 
+    // Grafiğin dikey eksen (Y) tavan değerini belirlemek için en yüksek soru sayısını buluyoruz
     int maxCount = 10;
     for (final e in entries) {
       if (e.value > maxCount) maxCount = e.value;
     }
-    // Round to next nice number for top of chart
+    // Grafiğin üst kısmında hoş görünmesi için en yakın 10'un katına yuvarlıyoruz
     final maxY = ((maxCount + 10) ~/ 10) * 10.0;
 
     return Container(
@@ -26,6 +35,7 @@ class WeeklyBarChart extends StatelessWidget {
         color: theme.cardTheme.color,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
+          // Koyu veya açık tema sınır çizgisi
           color: theme.brightness == Brightness.dark
               ? const Color(0xFF334155)
               : const Color(0xFFE2E8F0),
@@ -34,6 +44,7 @@ class WeeklyBarChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Kart başlığı ve grafik ikonu
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -45,11 +56,13 @@ class WeeklyBarChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+          // fl_chart Çubuk Grafik Alanı
           SizedBox(
             height: 180,
             child: BarChart(
               BarChartData(
-                maxY: maxY,
+                maxY: maxY, // Y ekseninin tepe sınırı
+                // Sütuna dokunulduğunda açılan bilgi balonu (Tooltip)
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
@@ -65,10 +78,12 @@ class WeeklyBarChart extends StatelessWidget {
                     },
                   ),
                 ),
+                // Eksen başlıkları ve etiketleri yapılandırması
                 titlesData: FlTitlesData(
                   show: true,
                   topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  // Sol Y eksenindeki soru sayısı sayısal basamakları
                   leftTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -84,6 +99,7 @@ class WeeklyBarChart extends StatelessWidget {
                       },
                     ),
                   ),
+                  // Alt X eksenindeki gün/ay etiketleri (Örn: 24 Eki)
                   bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
                       showTitles: true,
@@ -107,6 +123,7 @@ class WeeklyBarChart extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Yatay kılavuz çizgileri
                 gridData: FlGridData(
                   show: true,
                   drawVerticalLine: false,
@@ -115,21 +132,24 @@ class WeeklyBarChart extends StatelessWidget {
                     strokeWidth: 1,
                   ),
                 ),
+                // Dış sınır çerçevesini gizliyoruz
                 borderData: FlBorderData(show: false),
+                // 7 gün için dikey çubuk grupları oluşturuyoruz
                 barGroups: List.generate(entries.length, (index) {
                   final count = entries[index].value.toDouble();
                   return BarChartGroupData(
                     x: index,
                     barRods: [
                       BarChartRodData(
-                        toY: count,
+                        toY: count, // Çubuğun yüksekliği (soru sayısı)
+                        // Çubuk rengi için şık mavi gradyan
                         gradient: const LinearGradient(
                           colors: [AppColors.primary, AppColors.primaryLight],
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                         ),
-                        width: 16,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                        width: 16, // Çubuk kalınlığı
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)), // Üstü yuvarlak
                       ),
                     ],
                   );

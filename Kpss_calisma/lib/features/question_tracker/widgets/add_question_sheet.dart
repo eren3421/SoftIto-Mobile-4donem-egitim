@@ -1,20 +1,31 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Sayısal metin girişlerini filtrelemek için Services kütüphanesini içe aktarıyoruz
 import 'package:flutter/services.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk paleti sabitlerini içe aktarıyoruz
 import '../../../core/constants/app_colors.dart';
+// Tarih formatlama yardımcı sınıfını içe aktarıyoruz
 import '../../../core/utils/date_utils.dart';
+// KPSS 4 yanlış 1 doğru kuralı net hesaplayıcısını içe aktarıyoruz
 import '../../../core/utils/kpss_calculator.dart';
+// Ders listesini okumak için CurriculumProvider'ı içe aktarıyoruz
 import '../../../providers/curriculum_provider.dart';
+// Soru kaydını eklemek için QuestionProvider'ı içe aktarıyoruz
 import '../../../providers/question_provider.dart';
 
+// Kullanıcının çözdüğü soru sayılarını (Doğru, Yanlış, Boş) girmesini sağlayan modal alt pencere (BottomSheet)
 class AddQuestionSheet extends StatefulWidget {
+  // AddQuestionSheet kurucu fonksiyonu
   const AddQuestionSheet({super.key});
 
+  // Bu modal sayfayı alttan yukarı doğru açan statik yardımcı metot
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      isScrollControlled: true, // Klavyenin içeriği kapatmasını önlemek için tam kaydırma modu
+      backgroundColor: Colors.transparent, // Köşe yuvarlaklıklarının görünmesi için şeffaf zemin
       builder: (context) => const AddQuestionSheet(),
     );
   }
@@ -23,29 +34,47 @@ class AddQuestionSheet extends StatefulWidget {
   State<AddQuestionSheet> createState() => _AddQuestionSheetState();
 }
 
+// AddQuestionSheet'in durum yönetim ve form mantığı sınıfı
 class _AddQuestionSheetState extends State<AddQuestionSheet> {
+  // Seçilen dersin kimliği (Örn: 'turkce')
   String? _selectedCourseId;
+
+  // Doğru sayısı metin kontrolcüsü
   final _correctController = TextEditingController();
+
+  // Yanlış sayısı metin kontrolcüsü
   final _wrongController = TextEditingController();
+
+  // Boş sayısı metin kontrolcüsü
   final _emptyController = TextEditingController();
+
+  // Not veya konu adı metin kontrolcüsü
   final _noteController = TextEditingController();
+
+  // Soruların çözüldüğü tarih (Varsayılan: Bugün)
   DateTime _selectedDate = DateTime.now();
 
+  // Kullanıcı sayı girdikçe anlık olarak hesaplanan net puan
   double _calculatedNet = 0.0;
+
+  // Anlık toplam soru sayısı (D + Y + B)
   int _totalQuestions = 0;
 
   @override
   void initState() {
     super.initState();
+    // İlk açılışta dersler listesinden ilk dersi varsayılan olarak seçiyoruz
     final courses = context.read<CurriculumProvider>().courses;
     if (courses.isNotEmpty) {
       _selectedCourseId = courses.first.id;
     }
+    // Kullanıcı giriş yaptıkça net puanın anında yeniden hesaplanması için dinleyiciler ekliyoruz
     _correctController.addListener(_recalculate);
     _wrongController.addListener(_recalculate);
     _emptyController.addListener(_recalculate);
   }
 
+  // Doğru, yanlış ve boş kutularındaki değerleri toplayıp anlık neti hesaplayan metot
   void _recalculate() {
     final d = int.tryParse(_correctController.text) ?? 0;
     final y = int.tryParse(_wrongController.text) ?? 0;
@@ -58,6 +87,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
 
   @override
   void dispose() {
+    // Bellek sızıntılarını önlemek için tüm kontrolcüleri serbest bırakıyoruz
     _correctController.dispose();
     _wrongController.dispose();
     _emptyController.dispose();
@@ -69,6 +99,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final courses = context.watch<CurriculumProvider>().courses;
+    // Klavye açıldığında formun yukarı ötelenmesini sağlayan alt boşluk (insets)
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
@@ -82,6 +113,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Sayfanın en üstündeki küçük gri tutamaç çizgisi
             Center(
               child: Container(
                 width: 40,
@@ -93,6 +125,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
               ),
             ),
             const SizedBox(height: 16),
+            // Başlık ve Kapatma Çarpı Butonu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -113,7 +146,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Course Selection
+            // Ders Seçimi Başlığı ve Yatay Ders Çipleri (ChoiceChips)
             const Text(
               'Ders Seçimi',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
@@ -151,7 +184,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 20),
 
-            // Number Inputs: Doğru, Yanlış, Boş
+            // Sayısal Giriş Alanları: Doğru, Yanlış, Boş
             Row(
               children: [
                 Expanded(
@@ -181,7 +214,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Real-Time Net Preview Card
+            // Anlık Hesaplanan Net Önizleme Kartı
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -206,6 +239,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
                       ),
                     ],
                   ),
+                  // Anlık net değeri metni
                   Text(
                     _calculatedNet.toStringAsFixed(2),
                     style: const TextStyle(
@@ -219,7 +253,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Date Picker Row
+            // Tarih Seçici Satırı
             Row(
               children: [
                 const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
@@ -229,6 +263,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
                 ),
                 const Spacer(),
+                // Tarihi değiştirmek için takvim modalini açan buton
                 TextButton(
                   onPressed: _pickDate,
                   child: const Text('Değiştir'),
@@ -237,7 +272,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 10),
 
-            // Note Input
+            // İsteğe Bağlı Not Giriş Kutusu
             TextField(
               controller: _noteController,
               decoration: const InputDecoration(
@@ -247,7 +282,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
             ),
             const SizedBox(height: 24),
 
-            // Save Button
+            // Kaydetme Butonu (En az 1 soru girildiğinde aktifleşir)
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -261,6 +296,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
     );
   }
 
+  // Doğru, Yanlış ve Boş sayı giriş kutularını oluşturan yardımcı metot
   Widget _buildNumberInput({
     required TextEditingController controller,
     required String label,
@@ -281,6 +317,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
         TextField(
           controller: controller,
           keyboardType: TextInputType.number,
+          // Sadece rakam girilmesine izin verir (harf veya sembol yazılamaz)
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
@@ -297,6 +334,7 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
     );
   }
 
+  // Tarih seçiciyi (DatePicker) açan asenkron fonksiyon
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -309,12 +347,14 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
     }
   }
 
+  // Form verilerini toplayıp veritabanına kaydeden fonksiyon
   void _saveQuestionLog() {
     if (_selectedCourseId == null) return;
     final d = int.tryParse(_correctController.text) ?? 0;
     final y = int.tryParse(_wrongController.text) ?? 0;
     final b = int.tryParse(_emptyController.text) ?? 0;
 
+    // QuestionProvider üzerinden veritabanına yeni soru kaydı ekliyoruz
     context.read<QuestionProvider>().addQuestionLog(
           courseId: _selectedCourseId!,
           correct: d,
@@ -324,8 +364,10 @@ class _AddQuestionSheetState extends State<AddQuestionSheet> {
           note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
         );
 
+    // Modal alt sayfayı kapatıyoruz
     Navigator.pop(context);
 
+    // Kullanıcıya işlemin başarılı olduğuna dair bilgilendirme bildirimi (SnackBar) gösteriyoruz
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Soru kaydı başarıyla eklendi! Net: ${_calculatedNet.toStringAsFixed(2)}'),

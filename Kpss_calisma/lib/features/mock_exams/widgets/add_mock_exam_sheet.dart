@@ -1,14 +1,24 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Sayısal format filtreleri için Services kütüphanesini içe aktarıyoruz
 import 'package:flutter/services.dart';
+// Durum yönetimi için Provider paketini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk paleti sabitlerini içe aktarıyoruz
 import '../../../core/constants/app_colors.dart';
+// Tarih formatlama sınıfını içe aktarıyoruz
 import '../../../core/utils/date_utils.dart';
+// KPSS net hesaplayıcısını içe aktarıyoruz
 import '../../../core/utils/kpss_calculator.dart';
+// Deneme sınavlarını yöneten MockExamProvider'ı içe aktarıyoruz
 import '../../../providers/mock_exam_provider.dart';
 
+// KPSS Genel Yetenek ve Genel Kültür deneme sınavı sonuçlarının girildiği modal alt sayfa (BottomSheet)
 class AddMockExamSheet extends StatefulWidget {
+  // AddMockExamSheet kurucu fonksiyonu
   const AddMockExamSheet({super.key});
 
+  // Bu modal sayfayı alttan açan statik yardımcı metot
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet(
       context: context,
@@ -22,28 +32,49 @@ class AddMockExamSheet extends StatefulWidget {
   State<AddMockExamSheet> createState() => _AddMockExamSheetState();
 }
 
+// AddMockExamSheet durum yönetim ve hesaplama mantığı sınıfı
 class _AddMockExamSheetState extends State<AddMockExamSheet> {
+  // Deneme sınavı adı veya yayın evi kontrolcüsü
   final _titleController = TextEditingController();
+
+  // Genel Yetenek doğru sayısı kontrolcüsü
   final _gyCorrectController = TextEditingController();
+
+  // Genel Yetenek yanlış sayısı kontrolcüsü
   final _gyWrongController = TextEditingController();
+
+  // Genel Kültür doğru sayısı kontrolcüsü
   final _gkCorrectController = TextEditingController();
+
+  // Genel Kültür yanlış sayısı kontrolcüsü
   final _gkWrongController = TextEditingController();
+
+  // İsteğe bağlı sınav notu kontrolcüsü
   final _noteController = TextEditingController();
+
+  // Denemenin yapıldığı tarih (Varsayılan: Bugün)
   DateTime _selectedDate = DateTime.now();
 
+  // Anlık hesaplanan GY Neti
   double _gyNet = 0.0;
+
+  // Anlık hesaplanan GK Neti
   double _gkNet = 0.0;
+
+  // Anlık hesaplanan Toplam Net (GY + GK)
   double _totalNet = 0.0;
 
   @override
   void initState() {
     super.initState();
+    // Kullanıcı sayılarda değişiklik yaptıkça netleri anında yeniden hesaplayan dinleyiciler
     _gyCorrectController.addListener(_recalc);
     _gyWrongController.addListener(_recalc);
     _gkCorrectController.addListener(_recalc);
     _gkWrongController.addListener(_recalc);
   }
 
+  // GY ve GK netlerini KPSS kuralına (4 yanlış 1 doğru) göre hesaplayan metot
   void _recalc() {
     final gyC = int.tryParse(_gyCorrectController.text) ?? 0;
     final gyW = int.tryParse(_gyWrongController.text) ?? 0;
@@ -59,6 +90,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
 
   @override
   void dispose() {
+    // Tüm kontrolcüleri bellekten temizliyoruz
     _titleController.dispose();
     _gyCorrectController.dispose();
     _gyWrongController.dispose();
@@ -84,6 +116,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Üst tutamaç çizgisi
             Center(
               child: Container(
                 width: 40,
@@ -95,6 +128,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
               ),
             ),
             const SizedBox(height: 16),
+            // Başlık ve Çarpı kapatma butonu
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -112,7 +146,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Exam Name / Publisher
+            // Deneme Adı / Yayın Evi Giriş Kutusu
             TextField(
               controller: _titleController,
               decoration: const InputDecoration(
@@ -122,7 +156,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Genel Yetenek Section (Türkçe + Matematik = 60 Soru)
+            // Genel Yetenek (Türkçe + Matematik = 60 Soru) Bölümü
             _buildSectionHeader('Genel Yetenek (GY - 60 Soru)', AppColors.courseTurkce),
             const SizedBox(height: 8),
             Row(
@@ -143,12 +177,13 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
                   ),
                 ),
                 const SizedBox(width: 12),
+                // GY anlık net gösterge rozeti
                 _buildNetBadge('GY Net', _gyNet, AppColors.courseTurkce),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Genel Kültür Section (Tarih + Coğrafya + Vatandaşlık = 60 Soru)
+            // Genel Kültür (Tarih + Coğrafya + Vatandaşlık = 60 Soru) Bölümü
             _buildSectionHeader('Genel Kültür (GK - 60 Soru)', AppColors.courseTarih),
             const SizedBox(height: 8),
             Row(
@@ -169,12 +204,13 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
                   ),
                 ),
                 const SizedBox(width: 12),
+                // GK anlık net gösterge rozeti
                 _buildNetBadge('GK Net', _gkNet, AppColors.courseTarih),
               ],
             ),
             const SizedBox(height: 16),
 
-            // Total Net Preview
+            // Toplam Deneme Neti Vurgu Kartı (Mavi/Mor Gradyanlı)
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -207,7 +243,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Date Picker Row
+            // Tarih Seçici Satırı
             Row(
               children: [
                 const Icon(Icons.calendar_today, size: 18, color: Colors.grey),
@@ -225,7 +261,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
             ),
             const SizedBox(height: 10),
 
-            // Note
+            // İsteğe Bağlı Not Alanı
             TextField(
               controller: _noteController,
               decoration: const InputDecoration(
@@ -235,7 +271,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
             ),
             const SizedBox(height: 24),
 
-            // Submit Button
+            // Denemeyi Kaydetme Butonu
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -249,6 +285,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     );
   }
 
+  // Bölüm başlıklarını renkli dikey çubukla süsleyen yardımcı metot
   Widget _buildSectionHeader(String title, Color color) {
     return Row(
       children: [
@@ -266,6 +303,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     );
   }
 
+  // Sayısal doğru/yanlış giriş kutusu oluşturan yardımcı metot
   Widget _buildInput({
     required TextEditingController controller,
     required String label,
@@ -294,6 +332,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     );
   }
 
+  // GY veya GK netini kutu içerisinde şık şekilde gösteren rozet bileşeni
   Widget _buildNetBadge(String title, double net, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -315,6 +354,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     );
   }
 
+  // Takvim diyalog penceresini açan metot
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -327,6 +367,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     }
   }
 
+  // Girilen deneme verilerini toplayıp veritabanına ekleyen metot
   void _saveMockExam() {
     final title = _titleController.text.trim();
     final gyC = int.tryParse(_gyCorrectController.text) ?? 0;
@@ -334,6 +375,7 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
     final gkC = int.tryParse(_gkCorrectController.text) ?? 0;
     final gkW = int.tryParse(_gkWrongController.text) ?? 0;
 
+    // MockExamProvider üzerinden veritabanına kaydediyoruz
     context.read<MockExamProvider>().addExam(
           title: title.isEmpty ? 'KPSS Denemesi' : title,
           date: _selectedDate,
@@ -344,7 +386,10 @@ class _AddMockExamSheetState extends State<AddMockExamSheet> {
           note: _noteController.text.trim().isEmpty ? null : _noteController.text.trim(),
         );
 
+    // Modal pencereyi kapatıyoruz
     Navigator.pop(context);
+
+    // Bilgilendirme SnackBar'ı gösteriyoruz
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Deneme başarıyla kaydedildi! Toplam Net: ${_totalNet.toStringAsFixed(2)}'),

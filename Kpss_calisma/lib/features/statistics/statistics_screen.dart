@@ -1,27 +1,45 @@
+// Flutter Material Design bileşenlerini içe aktarıyoruz
 import 'package:flutter/material.dart';
+// Durum yönetimi için Provider kütüphanesini içe aktarıyoruz
 import 'package:provider/provider.dart';
+// Renk paleti sabitlerini içe aktarıyoruz
 import '../../core/constants/app_colors.dart';
+// Tarih ve süre formatlama yardımcılarını içe aktarıyoruz
 import '../../core/utils/date_utils.dart';
+// Müfredat ve ders bilgilerine erişmek için CurriculumProvider'ı içe aktarıyoruz
 import '../../providers/curriculum_provider.dart';
+// Soru çözümleri ve istatistik verilerini almak için QuestionProvider'ı içe aktarıyoruz
 import '../../providers/question_provider.dart';
+// Hızlı soru ekleme modal penceresini içe aktarıyoruz
 import '../question_tracker/widgets/add_question_sheet.dart';
+// Ders dağılımı pasta grafiğini içe aktarıyoruz
 import 'widgets/course_pie_chart.dart';
+// Son 7 günün soru çubuk grafiğini içe aktarıyoruz
 import 'widgets/weekly_bar_chart.dart';
 
+// KPSS çalışma verilerini, net puanları, fl_chart grafiklerini ve ders karnesini sunan İstatistik Ekranı
 class StatisticsScreen extends StatelessWidget {
+  // StatisticsScreen kurucu fonksiyonu
   const StatisticsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Soru ve müfredat sağlayıcılarını dinliyoruz
     final questionProv = context.watch<QuestionProvider>();
     final curriculumProv = context.watch<CurriculumProvider>();
     final theme = Theme.of(context);
 
+    // Bugüne kadar çözülmüş genel toplam soru sayısı
     final totalQuestions = questionProv.totalAllQuestions;
+    // Bugüne kadar yapılan toplam net puan
     final totalNet = questionProv.totalAllNetScore;
+    // Genel doğru yapma (başarı) yüzdesi
     final accuracy = questionProv.overallAccuracyRate;
+    // Toplam çalışma süresi (dakika)
     final totalStudyMinutes = questionProv.totalAllStudyMinutes;
+    // Ders bazında gruplanmış soru istatistikleri
     final courseStats = questionProv.getCourseStats();
+    // Son 7 güne ait soru dağılım verileri
     final last7Days = questionProv.getLast7DaysQuestionCounts();
 
     return Scaffold(
@@ -34,7 +52,7 @@ class StatisticsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Overall Stats Cards
+            // Genel Toplam Metrik Kartları (Net, Soru, Başarı, Süre)
             Row(
               children: [
                 Expanded(
@@ -84,36 +102,38 @@ class StatisticsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Empty State Protection Rule from SKILL.md
+            // Henüz soru çözülmediyse boş durum (Empty State) kartı göster
             if (totalQuestions == 0)
               _buildEmptyStateCard(context)
             else ...[
-              // Weekly Bar Chart
+              // Son 7 Gün Soru Dağılım Çubuk Grafiği (WeeklyBarChart)
               WeeklyBarChart(last7DaysData: last7Days),
               const SizedBox(height: 20),
 
-              // Course Pie Chart
+              // Ders Dağılım Pasta Grafiği (CoursePieChart)
               CoursePieChart(
                 courseStats: courseStats,
                 curriculumProv: curriculumProv,
               ),
               const SizedBox(height: 24),
 
-              // Course Performance Breakdown Table
+              // Ders Bazlı Başarı Karnesi Bölüm Başlığı
               Text(
                 'Ders Bazlı Başarı Karnesi',
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
+              // Her dersin net ve doğruluk yüzdesini listeleyen kartlar
               _buildCourseBreakdown(context, curriculumProv, courseStats),
               const SizedBox(height: 24),
 
-              // Question Logs History
+              // Son Soru Çözüm Kayıtları Başlığı
               Text(
                 'Son Soru Çözüm Kayıtları',
                 style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
+              // Geçmiş soru çözümlerini silme özellikli listeleyen bileşen
               _buildLogsList(context, questionProv),
             ],
             const SizedBox(height: 32),
@@ -123,6 +143,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  // Henüz veri girilmediğinde kullanıcıyı karşılayan ve soru eklemeye teşvik eden kart
   Widget _buildEmptyStateCard(BuildContext context) {
     final theme = Theme.of(context);
     return Container(
@@ -166,6 +187,7 @@ class StatisticsScreen extends StatelessWidget {
               style: theme.textTheme.bodySmall?.copyWith(fontSize: 13),
             ),
             const SizedBox(height: 20),
+            // İlk soru kaydını ekleten buton
             ElevatedButton.icon(
               onPressed: () => AddQuestionSheet.show(context),
               icon: const Icon(Icons.add, size: 18),
@@ -177,6 +199,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  // Genel metrik gösterge kartı (Toplam Net, Soru vb.) oluşturan yardımcı metot
   Widget _buildMetricTile(
     BuildContext context, {
     required String title,
@@ -228,6 +251,7 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  // Her dersin netini, doğru/yanlış oranını ve başarı karnesini oluşturan metot
   Widget _buildCourseBreakdown(
     BuildContext context,
     CurriculumProvider curriculumProv,
@@ -306,8 +330,10 @@ class StatisticsScreen extends StatelessWidget {
     );
   }
 
+  // Son çözülen soruların geçmiş listesini oluşturan metot
   Widget _buildLogsList(BuildContext context, QuestionProvider questionProv) {
     final theme = Theme.of(context);
+    // Son 6 kaydı alıyoruz
     final logs = questionProv.logs.take(6).toList();
 
     return Column(
@@ -364,6 +390,7 @@ class StatisticsScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(width: 4),
+              // İlgili kaydı silme butonu
               IconButton(
                 icon: const Icon(Icons.delete_outline, size: 18, color: Colors.grey),
                 onPressed: () => questionProv.deleteQuestionLog(log.id),
