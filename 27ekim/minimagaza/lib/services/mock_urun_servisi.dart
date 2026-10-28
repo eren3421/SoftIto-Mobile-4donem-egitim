@@ -5,8 +5,8 @@ import '../models/urun.dart';
 import 'urun_servisi.dart';
 class MockUrunServisi implements IUrunServisi{
   final List<Urun> _urunDeposu=const[
-    Urun(id:1,baslik: "Macbook M5 Pro Laptop",aciklama:"Yeni nesil Macbook pro",fiyat:180000,resimUrl:"https://picsum.photos/400/400",kategori:Kategori.elektronik,stokAdeti: 5,),
-    Urun(id:2,baslik: "Iphone 18 ",aciklama:"Yeni nesil tekefon",fiyat:150000,resimUrl:"https://picsum.photos/400/400",kategori:Kategori.elektronik,stokAdeti: 7,),
+    Urun(id:1,baslik: "Macbook M5 Pro Laptop",aciklama:"Yeni nesil Macbook pro",fiyat:180000,resimUrl:"https://picsum.photos/400/400/?random",kategori:Kategori.elektronik,stokAdeti: 5,),
+    Urun(id:2,baslik: "Iphone 18 ",aciklama:"Yeni nesil tekefon",fiyat:150000,resimUrl:"https://picsum.photos/400/400/",kategori:Kategori.elektronik,stokAdeti: 7,),
     Urun(id:3,baslik: "Erkek L Gömlek ",aciklama:"gömlek",fiyat:500,resimUrl:"https://picsum.photos/400/400",kategori:Kategori.aksesuar,stokAdeti: 10,),
     Urun(id:4,baslik: "Yağmurluk ",aciklama:"su geçirmez",fiyat:1500,resimUrl:"https://picsum.photos/400/400",kategori:Kategori.giyim,stokAdeti: 5,),
     Urun(id:5,baslik: "Iphone 18 ",aciklama:"Yeni nesil tekefon",fiyat:150000,resimUrl:"https://picsum.photos/400/400",kategori:Kategori.elektronik,stokAdeti: 34,),
