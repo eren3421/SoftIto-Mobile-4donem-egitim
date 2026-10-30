@@ -1,0 +1,38 @@
+# Projenin adını belirten alan
+name: mini_magaza_canli_api
+# Projenin amacını açıklayan kısa tanım
+description: "DTM Gün 11 - Canlı FakeStore API Entegrasyonlu ve Katmanlı Mimarili Flutter Uygulaması"
+# Bu paketin harici pub.dev'e kazara yayınlanmasını engelleyen güvenlik ayarı
+publish_to: "none"
+# Projenin mevcut sürüm numarası
+version: 1.0.0+1
+
+# Dart SDK sürüm kısıtlamaları
+environment:
+  # Desteklenen minimum ve maksimum Dart SDK sürüm aralığı
+  sdk: ">=3.0.0 <4.0.0"
+
+# Uygulamanın çalışma zamanında ihtiyaç duyduğu dış kütüphaneler
+dependencies:
+  # Flutter çekirdek widget ve çerçeve kütüphanesi
+  flutter:
+    # Flutter SDK'sının dahili bağımlılığı olduğunu belirtir
+    sdk: flutter
+  # iOS tarzı simgeler için gerekli paket
+  cupertino_icons: ^1.0.6
+  # REST API HTTP istekleri (GET, POST vb.) için kullanılan resmi paket
+  http: ^1.2.0
+
+# Sadece geliştirme ve test aşamasında kullanılan araçlar
+dev_dependencies:
+  # Flutter resmi birim ve widget test kütüphanesi
+  flutter_test:
+    # Test kütüphanesinin SDK bağımlılığı olduğunu belirtir
+    sdk: flutter
+  # Kod standartlarını ve stil kurallarını denetleyen linter kuralları
+  flutter_lints: ^3.0.0
+
+# Flutter'a özgü proje konfigürasyonları
+flutter:
+  # Projede Material Design 3 simge ve font setinin kullanılmasını aktifleştirir
+  uses-material-design: true

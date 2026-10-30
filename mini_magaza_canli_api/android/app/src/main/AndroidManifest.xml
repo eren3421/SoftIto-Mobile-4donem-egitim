@@ -1,0 +1,36 @@
+<!-- Android işletim sistemi için uygulamanın kök manifest tanımı -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Uygulamanın internete erişerek REST API'ye HTTP isteği atabilmesi için zorunlu izin -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Android uygulamasının temel yapılandırma etiketi -->
+    <application
+        <!-- Uygulamanın cihaz ana ekranında görünecek ismi -->
+        android:label="Mini Mağaza Canlı API"
+        <!-- Uygulamanın uygulama çekmecesinde görünecek simgesi -->
+        android:icon="@mipmap/ic_launcher">
+        <!-- Uygulama açıldığında çalıştırılacak ana Flutter Activity bileşeni -->
+        <activity
+            <!-- Flutter'ın Android tarafındaki ana motor sınıfı -->
+            android:name=".MainActivity"
+            <!-- Bu activity'nin dışarıdan (başlatıcıdan) tetiklenebilmesini sağlar -->
+            android:exported="true"
+            <!-- Ekran yönü veya boyut değişiminde activity'nin yeniden başlatılmasını önler -->
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            <!-- Donanım hızlandırma modunu belirler -->
+            android:hardwareAccelerated="true"
+            <!-- Klavye açıldığında ekranın davranış biçimini ayarlar -->
+            android:windowSoftInputMode="adjustResize">
+            <!-- Bu activity'nin cihaz başlatıcısı (launcher) tarafından çağrılacağını belirten filtre -->
+            <intent-filter>
+                <!-- Ana giriş noktası eylemi -->
+                <action android:name="android.intent.action.MAIN"/>
+                <!-- Uygulama çekmecesindeki simgeye tıklandığında açılacağını belirten kategori -->
+                <category android:name="android.intent.category.LAUNCHER"/>
+            <!-- Intent filtresi kapanış etiketi -->
+            </intent-filter>
+        <!-- Activity kapanış etiketi -->
+        </activity>
+    <!-- Application kapanış etiketi -->
+    </application>
+<!-- Manifest kök kapanış etiketi -->
+</manifest>
