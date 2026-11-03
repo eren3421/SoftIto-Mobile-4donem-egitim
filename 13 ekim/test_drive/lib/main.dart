@@ -1,122 +1,65 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Flutter'ın Material Design görsel bileşenlerini (widget) projeye dahil eder.
 
-void main() {
-  runApp(const MyApp());
-}
+void main() { // Uygulamanın başlangıç noktası olan ana (main) fonksiyondur.
+  runApp(const MyApp()); // Verilen widget'ı (MyApp) tam ekran çalıştırarak Flutter uygulamasını başlatır.
+} // main fonksiyonunun bitişi.
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class MyApp extends StatelessWidget { // Durumu değişmeyen (stateless) ana uygulama sınıfını tanımlar.
+  const MyApp({super.key}); // Sınıfın  kurucu metodudur, widget kimliğini (key) üst sınıfa iletir.
 
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
+  @override //  (StatelessWidget) build metodunu yeniden yazdığımızı belirtir.
+  Widget build(BuildContext context) { // Kullanıcı arayüzünü oluşturan ve geriye bir Widget döndüren metottur.
+    return MaterialApp( // Uygulamanın genel yapısını, temasını ve rotalarını yöneten kök widget'ı döndürür.
+      title: 'Flutter Demo', // Uygulamanın görev yöneticisinde (arka planda) görünen adını belirler.
+      theme: ThemeData( // Uygulamanın genel görünüm ve renk temasını yapılandırır.
+        colorScheme: .fromSeed(seedColor: Colors.deepPurple), // Koyu mor rengi baz alarak uyumlu bir renk paleti üretir.
+      ), // ThemeData widget'ının bitişi.
+      home: const MyHomePage(title: 'Flutter Demo Home Page'), // Uygulama açıldığında ilk gösterilecek ana ekranı belirler.
+    ); // MaterialApp widget'ının bitişi.
+  } // build metodunun bitişi.
+} // MyApp sınıfının bitişi.
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class MyHomePage extends StatefulWidget { // İçeriği/durumu dinamik olarak değişebilen (stateful) sayfa sınıfını tanımlar.
+  const MyHomePage({super.key, required this.title}); // Kurucu metot; dışarıdan 'title' parametresini zorunlu (required) olarak alır.
+  final String title; // Dışarıdan gelen başlık metnini tutan ve sonradan değiştirilemeyen (final) değişken.
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  @override // Üst sınıftaki createState metodunu ezdiğimizi belirtir.
+  State<MyHomePage> createState() => _MyHomePageState(); // Bu widget'ın durumunu (state) yönetecek olan sınıfı oluşturur ve bağlar.
+} // MyHomePage sınıfının bitişi.
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
+class _MyHomePageState extends State<MyHomePage> { // MyHomePage'in dinamik verilerini ve arayüzünü yöneten durum sınıfı ('_' işareti bu sınıfın sadece bu dosyaya özel/private olduğunu gösterir).
+  int _counter = 0; // Butona basılma sayısını tutan, başlangıç değeri 0 olan özel (private) tam sayı değişkeni.
 
-  final String title;
+  void _incrementCounter() { // Sayacı artırmak için kullanılan özel fonksiyon.
+    setState(() { // İçindeki değer değiştiğinde Flutter'a ekranı yeniden çizmesini (güncellemesini) söyleyen metot.
+      _counter++; // _counter değişkeninin değerini 1 artırır.
+    }); // setState metodunun bitişi.
+  } // _incrementCounter fonksiyonunun bitişi.
 
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
-  }
-}
+  @override // State sınıfındaki build metodunu ezdiğimizi belirtir.
+  Widget build(BuildContext context) { // Sayfanın güncel durumuna göre arayüzü çizen metot (her setState çağrısında tekrar çalışır).
+    return Scaffold( // Temel sayfa düzenini (üst çubuk, gövde, yüzen buton vb.) sağlayan iskelet widget.
+      appBar: AppBar( // Sayfanın en üstünde yer alan başlık çubuğunu (AppBar) tanımlar.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary, // Üst çubuğun arka plan rengini uygulama temasının ters birincil rengine ayarlar.
+        title: Text(widget.title), // Üst sınıf (MyHomePage) içindeki 'title' değişkenini metin olarak ekrana yazar.
+      ), // AppBar widget'ının bitişi.
+      body: Center( // Sayfanın ana gövdesini oluşturur ve içindeki bileşenleri ekranın tam ortasına hizalar.
+        child: Column( // İçindeki elemanları yukarıdan aşağıya (dikey) alt alta dizmek için kullanılan widget.
+          mainAxisAlignment: .center, // Sütun içindeki elemanları dikey eksende ekranın ortasına hizalar.
+          children: [ // Sütun (Column) içerisine eklenecek alt widget'ların listesini başlatır.
+            const Text('You have pushed the button this many times:'), // Ekrana sabit bir açıklama metni yazar.
+            Text( // Değişken olan sayaç değerini ekrana yazdırmak için kullanılan metin widget'ı.
+              '$_counter', // _counter değişkeninin o anki sayısal değerini metin (String) formatına çevirerek gösterir.
+              style: Theme.of(context).textTheme.headlineMedium, // Metnin yazı tipini ve boyutunu temanın orta boy başlık stiline ayarlar.
+            ), // Sayaç Text widget'ının bitişi.
+          ], // Column içindeki children listesinin bitişi.
+        ), // Column widget'ının bitişi.
+      ), // Center widget'ının bitişi.
+      floatingActionButton: FloatingActionButton( // Ekranın sağ alt köşesinde duran yuvarlak eylem butonunu tanımlar.
+        onPressed: _incrementCounter, // Butona tıklandığında _incrementCounter fonksiyonunu çalıştırır.
+        tooltip: 'Increment', // Butona uzun basıldığında veya fareyle üzerine gelindiğinde çıkan bilgi kutucuğu metni.
+        child: const Icon(Icons.add), // Butonun içinde artı (+) simgesi (ikonu) gösterir.
+      ), // FloatingActionButton widget'ının bitişi.
+    ); // Scaffold widget'ının bitişi.
+  } // build metodunun bitişi.
+} // _MyHomePageState sınıfının bitişi.
