@@ -28,5 +28,7 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Fotoğraf çekmek ve buluta yüklemek için kamera erişimi gereklidir.</string>
 </dict>
 </plist>

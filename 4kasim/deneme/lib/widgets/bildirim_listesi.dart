@@ -120,8 +120,36 @@ class BildirimListesiKarti extends StatelessWidget {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: bildirimler.length,
-                  separatorBuilder: (,_) => const Divider(height: 1),
-                  itemBuilder: (context,index){},
+                  separatorBuilder: (context, index) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final b = bildirimler[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const CircleAvatar(
+                        backgroundColor: Color.fromARGB(0, 123, 238, 220),
+                        child: Icon(
+                          Icons.mark_email_unread_outlined,
+                          color: Color.fromARGB(0, 113, 25, 25),
+                          size: 20,
+                        ),
+                      ),
+                      title: Text(
+                        b.baslik,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      subtitle: Text(b.icerik),
+                      trailing: Text(
+                        '${b.tarih.hour.toString().padLeft(2, '0')}:${b.tarih.minute.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade500,
+                        ),
+                      ),
+                    );
+                  },
                 ),
           ],
         ),
