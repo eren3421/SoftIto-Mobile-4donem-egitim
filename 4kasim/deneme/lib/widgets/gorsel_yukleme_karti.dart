@@ -1,8 +1,8 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 class GorselYuklemeKarti extends StatelessWidget {
-  final File? secilenDosya;
+  final Uint8List? secilenGorselBytes;
   final String? yuklenenUrl;
   final double yuklemeOrani;
   final bool yukleniyorMu;
@@ -12,7 +12,7 @@ class GorselYuklemeKarti extends StatelessWidget {
 
   const GorselYuklemeKarti({
     super.key,
-    required this.secilenDosya,
+    required this.secilenGorselBytes,
     required this.yuklenenUrl,
     required this.yuklemeOrani,
     required this.yukleniyorMu,
@@ -57,11 +57,11 @@ class GorselYuklemeKarti extends StatelessWidget {
                 border: Border.all(color: Colors.grey.shade300),
               ),
               alignment: Alignment.center,
-              child: secilenDosya != null
+              child: secilenGorselBytes != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.file(
-                        secilenDosya!,
+                      child: Image.memory(
+                        secilenGorselBytes!,
                         fit: BoxFit.cover,
                         width: double.infinity,
                         height: double.infinity,
@@ -98,7 +98,7 @@ class GorselYuklemeKarti extends StatelessWidget {
               LinearProgressIndicator(
                 value: yuklemeOrani,
                 backgroundColor: Colors.grey.shade200,
-                color: const Color.fromARGB(0, 8, 69, 3),
+                color: const Color(0xFF006C4A),
                 borderRadius: BorderRadius.circular(4),
               ),
               const SizedBox(height: 4),
@@ -131,7 +131,7 @@ class GorselYuklemeKarti extends StatelessWidget {
                 ),
               ],
             ),
-            if (secilenDosya != null) ...[
+            if (secilenGorselBytes != null) ...[
               const SizedBox(height: 8),
               FilledButton.icon(
                 onPressed: yukleniyorMu ? null : onBulutaYukle,

@@ -19,7 +19,7 @@ class SoftitioFcmUygulamasi extends StatelessWidget {
       title: "Softito FCM Demo Uygulaması",
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color.fromARGB(0, 0, 0, 0),
+          seedColor: const Color(0xFF006C4A),
           brightness: Brightness.light,
         ),
       ),
