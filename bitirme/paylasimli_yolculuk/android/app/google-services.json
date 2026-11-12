@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "976355255301",
+    "project_id": "paylasimli-yolculuk-app",
+    "storage_bucket": "paylasimli-yolculuk-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:976355255301:android:6259651f7848106580a86c",
+        "android_client_info": {
+          "package_name": "com.example.paylasimli_yolculuk"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAay-TiUSgGgpqfKQucUphFbTzny2OAmrs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
