@@ -1,4 +1,4 @@
-# Paylaşımlı Yolculuk (Carpooling / Ridesharing) Mobil Uygulaması
+# YolArkadaşı — Paylaşımlı Yolculuk (Carpooling / Ridesharing) Mobil Uygulaması
 
 Bu proje, `01_sistem_analizi_ve_mimari.md`, `02_veri_depolama_ve_sema.md` ve `03_antigravity_gelistirme_kilavuzu.md` dokümanlarında tanımlanan gereksinimlere birebir sadık kalınarak **Flutter**, **Feature-First Clean Architecture** ve **Riverpod** kullanılarak geliştirilmiştir.
 

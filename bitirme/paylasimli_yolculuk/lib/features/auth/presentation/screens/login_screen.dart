@@ -66,7 +66,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'Kampüs & Şehir İçi\nPaylaşımlı Yolculuk',
+                      'YolArkadaşı',
                       textAlign: TextAlign.center,
                       style: Theme.of(context)
                           .textTheme
@@ -75,7 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Güvenli, ekonomik ve çevreci ortak seyahat platformu',
+                      'Kampüs ve şehir içi güvenli, ekonomik ortak seyahat platformu',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppColors.lightTextSecondary,

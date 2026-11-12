@@ -1,4 +1,4 @@
-# Paylaşımlı Yolculuk (Carpooling) Mobil Uygulaması — Sistem Analizi ve Mimari Tasarım
+# YolArkadaşı — Paylaşımlı Yolculuk (Carpooling) Mobil Uygulaması Sistem Analizi ve Mimari Tasarım
 
 Bu doküman, bitirme projesi kapsamında geliştirilecek olan Flutter tabanlı paylaşımlı yolculuk (carpooling / ridesharing) mobil uygulamasının uçtan uca sistem analizini, fonksiyonel ve fonksiyonel olmayan gereksinimlerini, mimari katmanlarını ve iş akışlarını tanımlar.
 

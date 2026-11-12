@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     <application
-        android:label="Paylaşımlı Yolculuk"
+        android:label="YolArkadaşı"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

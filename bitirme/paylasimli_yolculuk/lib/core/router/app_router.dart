@@ -113,7 +113,7 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
   ];
 
   static const List<String> _titles = [
-    'Paylaşımlı Yolculuk',
+    'YolArkadaşı',
     'Yolculuklarım & Rezervasyonlar',
     'Mesajlar',
     'Profil & Araç Yönetimi',

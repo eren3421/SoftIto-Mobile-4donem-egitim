@@ -1,6 +1,6 @@
 {
-    "name": "Paylaşımlı Yolculuk (Carpooling)",
-    "short_name": "Paylaşımlı Yolculuk",
+    "name": "YolArkadaşı",
+    "short_name": "YolArkadaşı",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#F8FAFC",

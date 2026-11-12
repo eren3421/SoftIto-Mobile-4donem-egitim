@@ -13,7 +13,7 @@ class PaylasimliYolculukApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Paylaşımlı Yolculuk',
+      title: 'YolArkadaşı',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
