@@ -348,7 +348,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Konum ve Canlı Takip Paylaşımı (FR-06 & FR-07)',
+                'Konum ve Canlı Takip Paylaşımı',
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium

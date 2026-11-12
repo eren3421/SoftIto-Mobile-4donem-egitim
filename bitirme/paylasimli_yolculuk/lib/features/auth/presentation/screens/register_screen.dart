@@ -88,7 +88,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: Validators.validateEmail,
                       decoration: const InputDecoration(
-                        labelText: 'Üniversite / Kurumsal E-posta',
+                        labelText: 'E-posta',
                         prefixIcon: Icon(Icons.email_outlined),
                       ),
                     ),

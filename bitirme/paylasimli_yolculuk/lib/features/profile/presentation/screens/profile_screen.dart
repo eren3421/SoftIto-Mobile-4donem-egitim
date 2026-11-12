@@ -463,7 +463,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     secondary: const Icon(Icons.airplanemode_active_rounded),
                     title: const Text('Çevrimdışı (Uçak Modu) Simülasyonu'),
                     subtitle: const Text(
-                      'Aktif edildiğinde tüm veriler yerel Hive önbelleğinden okunur (FR-09)',
+                      'Aktif edildiğinde tüm veriler yerel Hive önbelleğinden okunur',
                     ),
                     value: isOffline,
                     onChanged: (val) {

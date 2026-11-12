@@ -91,7 +91,7 @@ class _ReviewModalSheetState extends ConsumerState<ReviewModalSheet> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Deneyiminizi 1-5 arası yıldız ve yorumla puanlayın (FR-08)',
+            'Deneyiminizi 1-5 arası yıldız ve yorumla puanlayın',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 16),

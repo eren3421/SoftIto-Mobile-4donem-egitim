@@ -87,7 +87,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       validator: Validators.validateEmail,
                       decoration: const InputDecoration(
-                        labelText: 'Kurumsal / Üniversite E-postası',
+                        labelText: 'E-posta',
                         prefixIcon: Icon(Icons.alternate_email_rounded),
                       ),
                     ),

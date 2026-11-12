@@ -608,7 +608,7 @@ class _RideDetailScreenState extends ConsumerState<RideDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Koltuk Rezervasyon Talebi (FR-05)',
+                          'Koltuk Rezervasyon Talebi',
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
@@ -733,7 +733,7 @@ class _RideDetailScreenState extends ConsumerState<RideDetailScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Text(
-                          'Sürücü Yolculuk Durum Yönetimi (FR-07)',
+                          'Sürücü Yolculuk Durum Yönetimi',
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
